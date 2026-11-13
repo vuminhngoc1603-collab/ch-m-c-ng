@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rồng chibi</title>
+<style>
+:root{--bg:#f6f1e8;--text:#2b2118}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17130f;--text:#f3ebe0}}
+:root[data-theme="dark"]{--bg:#17130f;--text:#f3ebe0}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+.stage{position:relative;aspect-ratio:740/493;background:url(/garden/sky-garden.webp) center/cover;border-radius:14px;overflow:hidden}
+.walker{position:absolute;bottom:3%;width:30%;left:10%;animation:cross 14s linear infinite}
+.flip{animation:face 14s steps(1) infinite}
+.char{position:relative;aspect-ratio:1024/1010;transform-origin:50% 100%;animation:waddle .6s ease-in-out infinite}
+.char>*{position:absolute;display:block}
+.char img{width:100%;height:auto;display:block;pointer-events:none}
+.shadow{position:absolute;left:25%;right:25%;bottom:-2%;height:6%;border-radius:50%;background:radial-gradient(#0006,transparent 70%);animation:shadow .6s ease-in-out infinite}
+.wing{left:1.367%;top:33.762%;width:38.477%;transform-origin:95.9% 41.9%;animation:flap .6s ease-in-out infinite}
+.tail{left:11.230%;top:70.594%;width:24.219%;transform-origin:86.7% 35.1%;animation:tailwag 1.2s ease-in-out infinite}
+.body{left:0.000%;top:0.000%;width:100.000%;transform-origin:50.0% 100.0%;}
+.head{left:18.066%;top:0.000%;width:49.414%;transform-origin:54.3% 95.7%;animation:headbob .6s ease-in-out infinite;animation-delay:-.1s}
+.bouquet{left:44.238%;top:44.950%;width:36.719%;transform-origin:7.2% 64.1%;animation:bob 1.2s ease-in-out infinite}
+.bouquet img{transform-origin:40% 80%;animation:shake .3s ease-in-out infinite}
+.foot{height:auto;animation:step .6s ease-in-out infinite}
+.foot.l{left:34.180%;top:91.584%;width:15.625%;}
+.foot.r{left:50.781%;top:91.584%;width:15.625%;animation-delay:-.3s}
+.foot svg{width:100%;height:auto;display:block}
+@keyframes cross{0%{left:-5%}50%{left:72%}100%{left:-5%}}
+@keyframes face{0%{transform:none}50%{transform:scaleX(-1)}}
+@keyframes waddle{0%,100%{transform:rotate(-2.5deg) translateY(0)}25%{transform:rotate(0) translateY(-2.5%) scale(.98,1.02)}50%{transform:rotate(2.5deg) translateY(0)}75%{transform:rotate(0) translateY(-2.5%) scale(.98,1.02)}}
+@keyframes shadow{0%,50%,100%{transform:scaleX(1)}25%,75%{transform:scaleX(.88);opacity:.8}}
+@keyframes flap{0%,100%{transform:rotate(-6deg) scaleX(1)}50%{transform:rotate(9deg) scaleX(.9)}}
+@keyframes tailwag{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(6deg)}}
+@keyframes headbob{0%,100%{transform:rotate(2deg)}25%,75%{transform:rotate(0) translateY(-1%)}50%{transform:rotate(-2deg)}}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(0)}30%{transform:translateY(-5%) rotate(-5deg)}60%{transform:translateY(2%) rotate(4deg)}}
+@keyframes shake{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
+@keyframes step{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-35%) rotate(-12deg)}50%{transform:translateY(0) rotate(0)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}.walker{left:35%}}
+.note{opacity:.75;font-size:13px}
+</style></head><body><div class="wrap">
+<div class="stage"><div class="walker"><div class="flip"><div class="char">
+<span class="shadow"></span>
+<span class="wing"><img src="wing.webp" alt=""></span>
+<span class="tail"><img src="tail.webp" alt=""></span>
+<span class="body"><img src="body.webp" alt=""></span>
+<span class="foot l"><svg viewBox="0 0 110 70"><defs><radialGradient id="g" cx="45%" cy="35%" r="70%"><stop offset="0" stop-color="#fffaf4"/><stop offset=".7" stop-color="#efe2d4"/><stop offset="1" stop-color="#d8c4b0"/></radialGradient></defs><ellipse cx="55" cy="38" rx="50" ry="28" fill="url(#g)"/><ellipse cx="30" cy="20" rx="9" ry="7" fill="#f7c9cf"/><ellipse cx="55" cy="14" rx="9" ry="7" fill="#f7c9cf"/><ellipse cx="80" cy="20" rx="9" ry="7" fill="#f7c9cf"/></svg></span>
+<span class="foot r"><svg viewBox="0 0 110 70"><ellipse cx="55" cy="38" rx="50" ry="28" fill="url(#g)"/><ellipse cx="30" cy="20" rx="9" ry="7" fill="#f7c9cf"/><ellipse cx="55" cy="14" rx="9" ry="7" fill="#f7c9cf"/><ellipse cx="80" cy="20" rx="9" ry="7" fill="#f7c9cf"/></svg></span>
+<span class="head"><img src="head.webp" alt=""></span>
+<span class="bouquet"><img src="bouquet.webp" alt="Bó hoa"></span>
+</div></div></div></div>
+<p class="note">Rồng chibi tách từ 1 ảnh: cánh vỗ, đuôi vẫy, đầu gật theo nhịp, 2 chân bước, tay cầm hoa nâng lên hạ xuống và lắc hoa.</p>
+</div></body></html>
