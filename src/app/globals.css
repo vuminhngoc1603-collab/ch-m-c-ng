@@ -140,6 +140,38 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .hearts, .zzz { position: absolute; left: 60%; top: 0; font-size: clamp(12px, 3cqw, 22px); pointer-events: none; z-index: 2; }
 .hearts { animation: float-up 1.3s ease-out forwards; }
 .zzz { left: 70%; animation: float-z 2.4s ease-in-out infinite; }
+/* Con giáp tách lớp (puppet) */
+.puppet { position: relative; display: block; width: 100%; }
+.puppet .pp { position: absolute; display: block; height: auto; max-width: none; pointer-events: none; user-select: none; filter: drop-shadow(0 1px 1px #0003); }
+.puppet .role-head { animation: p-head 3s ease-in-out infinite; }
+.puppet .role-tail { animation: p-tail 1.6s ease-in-out infinite; }
+.puppet .role-wing { animation: p-wing 1.4s ease-in-out infinite; }
+.puppet .role-arm { animation: p-arm 2.4s ease-in-out infinite; }
+.puppet .role-arm.ph-B { animation-delay: -1.2s; }
+.critter.walking .puppet .role-head { animation: p-head-walk .5s ease-in-out infinite; }
+.critter.walking .puppet .role-leg { animation: p-leg .5s ease-in-out infinite; }
+.critter.walking .puppet .role-leg.ph-B { animation-delay: -.25s; }
+.critter.walking .puppet .role-tail { animation-duration: .5s; }
+.critter.walking .puppet .role-wing { animation-duration: .5s; }
+.critter.walking .puppet .role-arm { animation: p-arm-walk .5s ease-in-out infinite; }
+.critter.walking .puppet .role-arm.ph-B { animation-delay: -.25s; }
+.critter.walking .rig.puppet { animation: waddle .5s ease-in-out infinite; }
+.critter.happy .puppet .role-head { animation: p-head-happy .65s ease-in-out 2; }
+.critter.happy .puppet .role-arm { animation: p-arm-walk .22s ease-in-out 6; }
+.critter.sleeping .puppet .role-head, .critter.mood-critical .puppet .role-head { animation: p-head-sleep 4s ease-in-out infinite; }
+.critter.sleeping .puppet .role-tail { animation-duration: 4s; }
+.critter.mood-hungry .puppet .pp { filter: saturate(.6); }
+.critter.mood-critical .puppet .pp { filter: grayscale(.7) brightness(.9); }
+@keyframes p-head { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg) translateY(1%); } }
+@keyframes p-head-walk { 0%, 100% { transform: rotate(-3deg) translateY(1%); } 50% { transform: rotate(3deg) translateY(-1.5%); } }
+@keyframes p-head-happy { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-8deg) scale(1.04); } 70% { transform: rotate(8deg) scale(1.04); } }
+@keyframes p-head-sleep { 0%, 100% { transform: rotate(7deg) translateY(3%); } 50% { transform: rotate(9deg) translateY(4%); } }
+@keyframes p-leg { 0%, 100% { transform: rotate(14deg) translateY(0); } 25% { transform: rotate(0) translateY(-18%); } 50% { transform: rotate(-14deg) translateY(0); } 75% { transform: rotate(0) translateY(0); } }
+@keyframes p-tail { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(10deg); } }
+@keyframes p-wing { 0%, 100% { transform: rotate(-6deg) scaleX(1); } 50% { transform: rotate(9deg) scaleX(.9); } }
+@keyframes p-arm { 0%, 100% { transform: rotate(-3deg) translateY(0); } 50% { transform: rotate(3deg) translateY(-3%); } }
+@keyframes p-arm-walk { 0%, 100% { transform: rotate(-7deg) translateY(1%); } 50% { transform: rotate(6deg) translateY(-5%); } }
+@keyframes waddle { 0%, 100% { transform: rotate(-2.5deg) translateY(0); } 25% { transform: rotate(0) translateY(-5%) scale(.98, 1.03); } 50% { transform: rotate(2.5deg) translateY(0); } 75% { transform: rotate(0) translateY(-5%) scale(.98, 1.03); } }
 @keyframes head-idle { 0%, 100% { transform: scale(1.16) rotate(-3deg); } 50% { transform: scale(1.16) rotate(3deg) translateY(1%); } }
 @keyframes head-walk { 0%, 100% { transform: scale(1.16) rotate(-4deg) translateY(1.5%); } 50% { transform: scale(1.16) rotate(4deg) translateY(-1%); } }
 @keyframes head-happy { 0%, 100% { transform: scale(1.16) rotate(0); } 30% { transform: scale(1.22) rotate(-8deg); } 70% { transform: scale(1.22) rotate(8deg); } }
@@ -152,7 +184,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 @keyframes pop { from { transform: translate(-50%, 6px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   .critter { transition: none; }
-  .rig, .part-head, .critter .rig, .critter .part-head { animation: none !important; }
+  .rig, .part-head, .critter .rig, .critter .part-head, .puppet .pp { animation: none !important; }
 }
 .pen > span { display: block; width: 100%; }
 .pen .pet-img { width: 62%; height: auto; display: block; margin: 0 auto; }

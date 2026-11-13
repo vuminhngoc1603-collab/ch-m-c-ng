@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { Rig } from "@/lib/rig";
 
-export type GardenPet = { id: string; name: string; img: string; slot: number; neck?: number };
+export type GardenPet = { id: string; name: string; img: string; slot: number; neck?: number; code?: string; rig?: Rig | null };
 
 type Scene = {
   key: string;
@@ -153,14 +154,31 @@ export function Garden({ pets, mood }: { pets: GardenPet[]; mood: "ok" | "hungry
               {st.happy && <span className="hearts" aria-hidden>💕</span>}
               {st.sleep && !st.walking && <span className="zzz" aria-hidden>💤</span>}
               <span className="critter-shadow" />
-              {/* Kiểu chibi: tách ảnh thành 2 lớp (thân / đầu), phóng to đầu và cho đầu, thân cử động lệch nhịp nhau. */}
               <span className="critter-body" style={{ transform: st.flip ? "scaleX(-1)" : undefined, ["--neck" as string]: `${(p.neck ?? 0.55) * 100}%` }}>
-                <span className="rig">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img className="part-body" src={p.img} alt="" draggable={false} />
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img className="part-head" src={p.img} alt={p.name} draggable={false} />
-                </span>
+                {p.rig && p.code ? (
+                  // Con giáp đã tách lớp: đầu, chân, đuôi, tay, cánh cử động riêng.
+                  <span className="rig puppet" style={{ aspectRatio: String(p.rig.ratio) }}>
+                    {p.rig.layers.map((l, i) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        key={i}
+                        className={`pp role-${l.role} ph-${l.phase}`}
+                        src={`/rig/${p.code}/${l.file ?? l.name}.webp`}
+                        alt={l.role === "body" ? p.name : ""}
+                        draggable={false}
+                        style={{ left: `${l.x}%`, top: `${l.y}%`, width: `${l.w}%`, transformOrigin: `${l.ox}% ${l.oy}%` }}
+                      />
+                    ))}
+                  </span>
+                ) : (
+                  // Dự phòng kiểu chibi: tách ảnh thành 2 lớp thân / đầu.
+                  <span className="rig">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img className="part-body" src={p.img} alt="" draggable={false} />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img className="part-head" src={p.img} alt={p.name} draggable={false} />
+                  </span>
+                )}
               </span>
             </button>
           );

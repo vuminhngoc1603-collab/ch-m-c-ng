@@ -32,6 +32,14 @@ Mọi mốc giờ tính theo giờ Việt Nam (UTC+7) và lấy giờ máy chủ
 - Con giáp đói đi chậm và nhạt màu, nguy kịch thì xám. Người bật "giảm chuyển động" trong hệ điều hành sẽ thấy con giáp đứng yên.
 - Thay ảnh một con giáp: ghi đè file webp cùng tên (nên tách nền, cao khoảng 360px).
 
+### Con giáp cử động kiểu anime (tách lớp)
+
+Mỗi con được tách thành các lớp **thân, đầu, chân, đuôi, tay, cánh**, nằm trong `public/rig/<mã>/`, kèm `rig.json` ghi vị trí và điểm xoay (cổ, hông, gốc đuôi...). Trong vườn, khi đi thì chân bước luân phiên, đầu gật, đuôi vẫy, tay đánh; bấm vào thì nhảy và lắc đầu; nghỉ thì thở, thỉnh thoảng ngủ gật.
+
+- Sửa vị trí bộ phận: chỉnh đa giác/điểm xoay trong `tools/rigs.py`, chạy `python3 tools/rig_build.py <thư mục ảnh gốc> public/rig`, rồi gộp các `rig.json` vào `src/lib/rig-data.json` (đoạn script ở cuối `tools/rig_build.py`).
+- Con Thìn dùng ảnh rồng cầm hoa (`tools/tach-lop-rong.py`); 2 bàn chân là phần vẽ thêm. Ảnh rồng cũ vẫn giữ ở `public/zodiac/thin-cu.webp`.
+- Ảnh rồng có chữ ký/con dấu của họa sĩ: cần xin phép tác giả trước khi dùng chính thức.
+
 ## Giả định đã chọn (chưa có trong đặc tả)
 
 1. **Quên đóng cửa chỉ tính khi hôm đó có đi làm** (đã cho ăn ít nhất 1 lượt). Không đi làm cả ngày thì không bị mở cửa cho trộm, vì đã bị tính bỏ bữa.
