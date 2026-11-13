@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { User } from "@prisma/client";
 import { logout } from "@/app/actions";
+import { Help } from "./Help";
 
 export function Nav({ user }: { user: User }) {
   const isAdmin = user.role === "ADMIN";
@@ -25,6 +26,7 @@ export function Nav({ user }: { user: User }) {
           )}
         </nav>
         <form action={logout} className="row">
+          <Help autoOpenKey={isAdmin ? undefined : "help-seen-v1"} />
           <span className="muted small">{user.name ?? user.email}</span>
           <button className="btn" type="submit">Đăng xuất</button>
         </form>

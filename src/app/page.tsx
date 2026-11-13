@@ -12,6 +12,7 @@ import { eggPrice, feedCents, fmtCoins, inWindow } from "@/lib/rules";
 import { fmtDay, fmtMin, fmtDateTime, vn } from "@/lib/time";
 import { ZODIAC, ZODIAC_NECK, zodiacImage } from "@/lib/zodiac";
 import { Garden } from "@/components/Garden";
+import { RulesPanel } from "@/components/RulesPanel";
 import { rigFor } from "@/lib/rig";
 import { feedAction, closeAction, stealAction, buyEggAction } from "@/app/actions";
 
@@ -76,10 +77,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ o
           <div className="stat"><div className="label">Bỏ bữa tháng này</div><div className="value">{monthMisses}</div><div className="muted small">liên tiếp: {me.missStreak}</div></div>
         </div>
 
-        <section className="card">
+        <div className="garden-layout">
+        <RulesPanel role={user.role!} />
+        <section className="card garden-card">
           <div className="row space"><h2>Khu vườn của tôi</h2><span className="muted small">Bấm vào con giáp để xem tên</span></div>
           <Garden mood={mood} pets={pets.map((p) => ({ id: p.id, slot: p.slot, img: zodiacImage(p.zodiac), name: ZODIAC[p.zodiac].name, neck: ZODIAC_NECK[p.zodiac], code: p.zodiac.toLowerCase(), rig: rigFor(p.zodiac) }))} />
         </section>
+        </div>
 
         <div className="grid cols-2">
           <section className="card">

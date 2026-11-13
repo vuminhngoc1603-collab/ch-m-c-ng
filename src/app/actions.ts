@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import type { LeaveType, Role, UserStatus } from "@prisma/client";
 import { AppError, prisma } from "@/lib/db";
 import { signIn, signOut } from "@/auth";
-import { requestMeta, requireAdmin, requireStaff, requireUser } from "@/lib/session";
+import { currentUser, requestMeta, requireAdmin, requireStaff, requireUser } from "@/lib/session";
 import { feed, closeYard } from "@/server/attendance";
 import { steal } from "@/server/theft";
 import { buyEgg, movePet } from "@/server/yard";
@@ -46,6 +46,19 @@ export async function loginGoogle() {
 
 export async function logout() {
   await signOut({ redirectTo: "/login" });
+}
+
+// ---------- Đăng ký: chọn loại công việc (khi đang chờ duyệt) ----------
+
+export async function chooseJobTypeAction(form: FormData) {
+  const u = await currentUser();
+  if (!u) redirect("/login");
+  const role = String(form.get("jobType") ?? "");
+  if (u.status !== "PENDING") redirect("/");
+  if (role !== "FULLTIME" && role !== "PARTTIME") redirect("/pending?err=" + encodeURIComponent("Hãy chọn Full-time hoặc Part-time."));
+  await prisma.user.update({ where: { id: u.id }, data: { requestedRole: role as Role } });
+  revalidatePath("/pending");
+  redirect("/pending?ok=" + encodeURIComponent("Đã lưu loại công việc. Admin sẽ duyệt theo lựa chọn này."));
 }
 
 // ---------- Nhân viên ----------

@@ -9,7 +9,7 @@ Quên đóng cửa thì đồng nghiệp được trộm xu, bỏ bữa thì con
 
 | Nhóm | Có gì |
 |---|---|
-| Đăng nhập | Chỉ Google, chỉ web. Lần đầu đăng nhập: chờ admin duyệt. Email trong `ADMIN_EMAILS` tự thành admin. |
+| Đăng nhập | Chỉ Google, chỉ web. Lần đầu đăng nhập: tự chọn loại công việc (Full-time/Part-time) rồi chờ admin duyệt (ô vai trò khi duyệt điền sẵn lựa chọn này). Email trong `ADMIN_EMAILS` tự thành admin. |
 | Vai trò | Admin (chỉ quản trị) · Full-time · Part-time |
 | Full-time | T2–T6: cho ăn 8h30–9h00 và 13h45–14h00, đóng cửa 17h30–18h00. T7/CN nghỉ. |
 | Part-time | Đăng ký ca tuần sau **chỉ trong ngày thứ Sáu**; hết thứ Sáu khoá, chỉ admin đổi hộ (bắt buộc ghi lý do). Chặn 2 ca chồng giờ. T7/CN tuỳ chọn. |
@@ -23,6 +23,12 @@ Quên đóng cửa thì đồng nghiệp được trộm xu, bỏ bữa thì con
 | Admin | Duyệt/khoá tài khoản, đổi vai trò, duyệt nghỉ, đổi ca hộ, sửa giờ ca, sửa luật (Rules Engine JSON), điều chỉnh xu/điểm có lý do, báo cáo tháng + CSV, chạy quét thủ công. |
 
 Mọi mốc giờ tính theo giờ Việt Nam (UTC+7) và lấy giờ máy chủ.
+
+## Hướng dẫn cho người chơi
+
+- Nút **?** trên thanh menu (và ở trang đăng nhập, trang chờ duyệt) mở bảng hướng dẫn đầy đủ: `src/components/Help.tsx`. Nhân viên mới vào lần đầu sẽ tự thấy bảng này.
+- Trang Sân của tôi có khung **Quy tắc chơi** bên trái khu vườn, tóm tắt theo đúng loại công việc: `src/components/RulesPanel.tsx`.
+- Mọi con số trong hướng dẫn (giờ ca, hệ số, giá trứng, phạt...) lấy từ cấu hình hiện tại, admin sửa luật thì hướng dẫn tự đổi theo.
 
 ## Khu vườn có con giáp đi lại
 

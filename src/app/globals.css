@@ -188,3 +188,40 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .pen > span { display: block; width: 100%; }
 .pen .pet-img { width: 62%; height: auto; display: block; margin: 0 auto; }
+
+/* ---------- Hướng dẫn & quy tắc ---------- */
+.help-btn { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--accent); background: var(--surface); color: var(--accent); font: 700 17px/1 inherit; cursor: pointer; display: inline-grid; place-items: center; flex: none; }
+.help-btn:hover { background: var(--accent); color: var(--accent-ink); }
+.help-dialog { width: min(720px, calc(100vw - 24px)); max-height: calc(100vh - 32px); padding: 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.help-dialog::backdrop { background: rgb(0 0 0 / .5); }
+.help-head { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 18px; background: var(--surface); border-bottom: 1px solid var(--border); }
+.help-head h2 { margin: 0; }
+.help-body { padding: 4px 18px 20px; line-height: 1.55; text-align: left; }
+.help-body h3 { margin: 18px 0 6px; font-size: 1.02rem; }
+.help-body ul, .help-body ol { margin: 6px 0; padding-left: 20px; }
+.help-body li { margin: 3px 0; }
+.help-body .lead { margin-top: 12px; }
+.help-note { background: var(--surface-2); border-left: 3px solid var(--accent); padding: 8px 12px; border-radius: 8px; margin: 8px 0; }
+.help-tips { list-style: none; padding-left: 0 !important; }
+.help-corner { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 12px; }
+
+.garden-layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; align-items: start; }
+.garden-card { min-width: 0; }
+.rules-panel { position: sticky; top: 70px; max-height: calc(100vh - 86px); overflow: auto; padding: 14px 16px; }
+.rules-panel h2 { margin: 0; font-size: 1.05rem; }
+.rules-panel ul { margin: 4px 0 8px; padding-left: 18px; }
+.rules-panel li { margin: 2px 0; }
+.rules-panel p { margin: 4px 0; }
+.rules-acc { border-top: 1px solid var(--border); padding: 8px 0 2px; }
+.rules-acc summary { cursor: pointer; font-weight: 600; list-style-position: inside; }
+.rules-acc[open] summary { margin-bottom: 4px; }
+.rules-warn { background: var(--surface-2); border-left: 3px solid var(--accent); padding: 6px 10px; border-radius: 8px; }
+@media (max-width: 860px) {
+  .garden-layout { grid-template-columns: minmax(0, 1fr); }
+  .rules-panel { position: static; max-height: none; }
+}
+.job-pick { display: grid; gap: 10px; margin: 16px 0 4px; text-align: left; }
+.job-opt { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; cursor: pointer; }
+.job-opt:has(input:checked), .job-opt.on { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent); }
+.job-opt input { margin-top: 4px; accent-color: var(--accent); }
+.job-pick .btn { justify-content: center; }

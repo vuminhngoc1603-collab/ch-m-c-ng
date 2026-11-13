@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/session";
 import { loginGoogle } from "@/app/actions";
 import { ALL_ZODIAC, ZODIAC } from "@/lib/zodiac";
+import { Help } from "@/components/Help";
 
 const ERRORS: Record<string, string> = {
   domain: "Email của bạn không thuộc tên miền được phép.",
@@ -24,7 +25,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <form action={loginGoogle}>
           <button className="btn primary big" type="submit">Đăng nhập bằng Google</button>
         </form>
-        <p className="muted small" style={{ marginTop: 16 }}>Lần đầu đăng nhập, tài khoản sẽ chờ admin duyệt.</p>
+        <p className="muted small" style={{ marginTop: 16 }}>Lần đầu đăng nhập, bạn chọn loại công việc rồi chờ admin duyệt.</p>
+        <div className="help-corner"><span className="muted small">Cách chơi</span><Help /></div>
       </div>
     </main>
   );

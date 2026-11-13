@@ -51,11 +51,14 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               <tbody>{pending.map((u) => (
                 <tr key={u.id}>
                   <td>{u.name}<div className="muted small">{u.email}</div></td>
-                  <td className="muted small">Đăng nhập lần đầu {fmtDateTime(u.createdAt)}</td>
+                  <td className="muted small">
+                    Đăng ký: {u.requestedRole ? <b>{ROLE[u.requestedRole]}</b> : <span className="badge">chưa chọn</span>}
+                    <div>Đăng nhập lần đầu {fmtDateTime(u.createdAt)}</div>
+                  </td>
                   <td>
                     <form action={approveUserAction} className="row">
                       <input type="hidden" name="userId" value={u.id} />
-                      <RoleSelect />
+                      <RoleSelect value={u.requestedRole} />
                       <button className="btn primary">Duyệt</button>
                     </form>
                   </td>

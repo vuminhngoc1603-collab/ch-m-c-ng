@@ -105,6 +105,7 @@ model User {
   image         String?
   emailVerified DateTime?
   role          Role?
+  requestedRole Role? // loại công việc người dùng tự chọn khi đăng ký (admin duyệt)
   status        UserStatus @default(PENDING)
   approvedAt    DateTime?
   approvedById  String?
