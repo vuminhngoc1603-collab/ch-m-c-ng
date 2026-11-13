@@ -1,10 +1,14 @@
 import { prisma, lockUser } from "@/lib/db";
 import { shouldDie } from "@/lib/rules";
-import { addDays, periodOf, prevPeriod, vn } from "@/lib/time";
+import { addDays, periodOf, prevPeriod, vn, weekdayOf } from "@/lib/time";
 import { getRules } from "./settings";
 import { syncSlots } from "./attendance";
 import { ensureFirstPet, grantRandomPet, killRandomPet, type Rng } from "./yard";
 import { settleMonth } from "./settlement";
+import { skillsOf, countUses } from "./skills";
+import { mondayOf } from "./schedule";
+import { feedCents, type Rules } from "@/lib/rules";
+import type { User } from "@prisma/client";
 
 const BACKFILL_DAYS = 7;
 
@@ -19,7 +23,7 @@ const BACKFILL_DAYS = 7;
 export async function runTick(now = new Date(), rng: Rng = Math.random) {
   const rules = await getRules();
   const v = vn(now);
-  const stats = { synced: 0, missed: 0, deaths: 0, forgot: 0, regranted: 0, firstPets: 0, settled: 0 };
+  const stats = { synced: 0, missed: 0, deaths: 0, forgot: 0, regranted: 0, firstPets: 0, settled: 0, skills: 0 };
 
   const users = await prisma.user.findMany({ where: { status: "ACTIVE", role: { in: ["FULLTIME", "PARTTIME"] } } });
 
@@ -90,8 +94,25 @@ export async function runTick(now = new Date(), rng: Rng = Math.random) {
     const cameToWork = await prisma.attendance.count({ where: { userId: slot.userId, day: slot.day, feedStatus: "FED" } });
     const status = cameToWork > 0 ? "FORGOT" : "SKIPPED";
     const upd = await prisma.attendance.updateMany({ where: { id: slot.id, closeStatus: "PENDING" }, data: { closeStatus: status } });
-    if (upd.count && status === "FORGOT") stats.forgot++;
+    if (upd.count && status === "FORGOT") {
+      stats.forgot++;
+      // Dần "Gầm canh cửa": lần quên đóng cửa đầu tháng không ai trộm được.
+      const sk = await skillsOf(slot.userId, rules);
+      if (sk.has("DAN")) {
+        const period = periodOf(slot.day);
+        const used = await countUses(prisma, slot.userId, "DAN", { periods: [period] });
+        if (used < rules.skills.danPerMonth) {
+          const ok = await prisma.skillUse
+            .create({ data: { userId: slot.userId, zodiac: "DAN", refKey: `att:${slot.id}`, period, note: `Canh cửa (quên đóng cửa ${slot.day})` } })
+            .catch(() => null); // chạy song song: lượt kia đã ghi
+          if (ok) stats.skills++;
+        }
+      }
+    }
   }
+
+  // 4b. Kỹ năng theo tuần / ngày lễ.
+  stats.skills += await runSkillRewards(users, v.day, rules, now);
 
   // 5. Quyết toán tháng trước (chạy được nhiều lần, chỉ tạo phần còn thiếu).
   const last = await prisma.setting.findUnique({ where: { key: "lastSettledPeriod" } });
@@ -120,4 +141,65 @@ export async function maybeTick(now = new Date(), minSeconds = 60) {
     console.error("tick failed", e);
     return null;
   }
+}
+
+/**
+ * Sửu "Cần cù": tuần (T2–CN) đã kết thúc, có đi làm và không bỏ bữa nào -> +xu.
+ * Tuất "Trung thành": ngày lễ chung, con tự cho ăn thay -> nhận xu như đi làm (giới hạn số ngày/tháng).
+ * Idempotent nhờ unique(userId, zodiac, refKey).
+ */
+async function runSkillRewards(users: User[], today: string, rules: Rules, now: Date) {
+  let n = 0;
+  const lastMonday = addDays(mondayOf(today), -7); // tuần vừa kết thúc
+  const holidays = await prisma.holiday.findMany({ where: { day: { gte: addDays(today, -BACKFILL_DAYS), lte: today } }, orderBy: { day: "asc" } });
+  const ftShifts = await prisma.shift.findMany({ where: { kind: "FULLTIME", active: true } });
+  for (const user of users) {
+    const sk = await skillsOf(user.id, rules);
+    if (sk.has("SUU")) {
+      for (const monday of [addDays(lastMonday, -7), lastMonday]) {
+        const sunday = addDays(monday, 6);
+        const suu = await prisma.pet.findFirst({ where: { userId: user.id, zodiac: "SUU", status: "ALIVE" } });
+        if (!suu || vn(suu.acquiredAt).day > monday) continue; // phải nuôi Sửu từ đầu tuần
+        const days = { gte: monday, lte: sunday };
+        const [fed, missed] = await Promise.all([
+          prisma.attendance.count({ where: { userId: user.id, day: days, feedStatus: "FED" } }),
+          prisma.attendance.count({ where: { userId: user.id, day: days, feedStatus: "MISSED" } }),
+        ]);
+        if (fed === 0 || missed > 0) continue;
+        n += await grantSkillCoins(user.id, "SUU", `week:${monday}`, periodOf(sunday), rules.skills.suuWeeklyCoins * 100, `Sửu cần cù: tuần ${monday} không bỏ bữa`, now);
+      }
+    }
+    if (sk.has("TUAT") && holidays.length) {
+      const tuat = await prisma.pet.findFirst({ where: { userId: user.id, zodiac: "TUAT", status: "ALIVE" } });
+      for (const h of holidays) {
+        if (!tuat || vn(tuat.acquiredAt).day > h.day) continue;
+        if (user.approvedAt && vn(user.approvedAt).day > h.day) continue;
+        const period = periodOf(h.day);
+        if ((await countUses(prisma, user.id, "TUAT", { periods: [period] })) >= rules.skills.tuatDaysPerMonth) continue;
+        // Số lượt cho ăn người này lẽ ra phải làm hôm đó nếu không phải ngày lễ.
+        const wd = weekdayOf(h.day);
+        const slots =
+          user.role === "FULLTIME"
+            ? wd === 0 || wd === 6 ? 0 : ftShifts.length
+            : await prisma.shiftRegistration.count({ where: { userId: user.id, day: h.day } });
+        if (slots === 0) continue;
+        const alive = await prisma.pet.count({ where: { userId: user.id, status: "ALIVE" } });
+        const cents = slots * feedCents(alive, rules, sk.has("THIN") ? rules.skills.thinBonus : 0);
+        n += await grantSkillCoins(user.id, "TUAT", `holiday:${h.day}`, period, cents, `Tuất trực lễ ${h.name} (${h.day}): tự cho ăn ${slots} lượt`, now);
+      }
+    }
+  }
+  return n;
+}
+
+async function grantSkillCoins(userId: string, zodiac: "SUU" | "TUAT", refKey: string, period: string, cents: number, reason: string, now: Date) {
+  return prisma
+    .$transaction(async (tx) => {
+    const exists = await tx.skillUse.findUnique({ where: { userId_zodiac_refKey: { userId, zodiac, refKey } } });
+    if (exists) return 0;
+    await tx.skillUse.create({ data: { userId, zodiac, refKey, period, amount: cents, note: reason, createdAt: now } });
+    await tx.coinLedger.create({ data: { userId, amount: cents, type: "SKILL", period, refId: refKey, reason, createdAt: now } });
+    return 1;
+  })
+    .catch(() => 0); // trùng unique khi 2 lần quét chạy cùng lúc: lần kia đã cộng
 }

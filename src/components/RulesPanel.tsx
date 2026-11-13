@@ -4,6 +4,8 @@ import { getRules } from "@/server/settings";
 import { fmtMin } from "@/lib/time";
 import { fmtVnd } from "@/lib/rules";
 import { Help } from "./Help";
+import { skillInfo } from "@/lib/skills";
+import { ALL_ZODIAC, ZODIAC } from "@/lib/zodiac";
 import { getNetworkPolicy } from "@/server/network";
 
 const WEEKDAY = ["Chủ nhật", "thứ Hai", "thứ Ba", "thứ Tư", "thứ Năm", "thứ Sáu", "thứ Bảy"];
@@ -79,9 +81,17 @@ export async function RulesPanel({ role }: { role: Role }) {
       <details className="rules-acc">
         <summary>Cuối tháng và mua trứng</summary>
         <ul className="small">
-          <li>Biến động = xu cho ăn + trộm được − bị trộm. Dùng để tính thưởng.</li>
+          <li>Biến động = xu cho ăn + trộm được − bị trộm + xu kỹ năng. Dùng để tính thưởng.</li>
           <li>Đổi 1 xu = {rules.pointsPerCoin} điểm (tháng âm = 0), điểm cộng dồn.</li>
           <li>Trứng con thứ n giá {rules.eggStep} × (n − 1) điểm, nở con ngẫu nhiên không trùng.</li>
+        </ul>
+      </details>
+
+      <details className="rules-acc">
+        <summary>Kỹ năng con giáp</summary>
+        <p className="small">Chỉ có tác dụng khi con đó còn sống trong sân. Xem chi tiết ở mục ✨ Kỹ năng con giáp bên dưới.</p>
+        <ul className="small">
+          {ALL_ZODIAC.filter((z) => rules.skills.enabled.includes(z)).map((z) => <li key={z}>{ZODIAC[z].name}: {skillInfo(z, rules).name}</li>)}
         </ul>
       </details>
 

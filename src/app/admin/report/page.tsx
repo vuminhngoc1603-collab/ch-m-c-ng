@@ -35,12 +35,12 @@ export default async function ReportPage({ searchParams }: { searchParams: Promi
         </p>
         <section className="card table-wrap">
           <table>
-            <thead><tr><th>Nhân viên</th><th className="num">Cho ăn</th><th className="num">Trộm được</th><th className="num">Bị trộm</th><th className="num">Điều chỉnh</th><th className="num">Biến động</th><th className="num">Thưởng tham chiếu</th><th className="num">Điểm</th><th className="num">Bỏ bữa</th><th className="num">Con chết</th><th className="num">Phạt</th></tr></thead>
+            <thead><tr><th>Nhân viên</th><th className="num">Cho ăn</th><th className="num">Trộm được</th><th className="num">Bị trộm</th><th className="num">Điều chỉnh</th><th className="num">Kỹ năng</th><th className="num">Biến động</th><th className="num">Thưởng tham chiếu</th><th className="num">Điểm</th><th className="num">Bỏ bữa</th><th className="num">Con chết</th><th className="num">Phạt</th></tr></thead>
             <tbody>{rows.map((r) => (
               <tr key={r.userId}>
                 <td>{r.name}<div className="muted small">{r.role === "FULLTIME" ? "Full-time" : "Part-time"}{r.settled ? " · đã chốt" : ""}</div></td>
                 <td className="num">{fmtCoins(r.feedCoins)}</td><td className="num">{fmtCoins(r.stealGainCoins)}</td><td className="num">{fmtCoins(r.stealLossCoins)}</td>
-                <td className="num">{fmtCoins(r.adjustCoins)}</td><td className="num"><b>{fmtCoins(r.netCoins)}</b></td><td className="num">{fmtVnd(r.rewardVnd)}</td>
+                <td className="num">{fmtCoins(r.adjustCoins)}</td><td className="num">{fmtCoins(r.skillCoins)}</td><td className="num"><b>{fmtCoins(r.netCoins)}</b></td><td className="num">{fmtVnd(r.rewardVnd)}</td>
                 <td className="num">{r.points}</td><td className="num">{r.missedCount}</td><td className="num">{r.deathCount}</td><td className="num">{fmtVnd(r.penaltyVnd)}</td>
               </tr>
             ))}</tbody>

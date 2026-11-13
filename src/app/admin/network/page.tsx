@@ -2,8 +2,8 @@ import { prisma } from "@/lib/db";
 import { requireAdmin, requestMeta } from "@/lib/session";
 import { Nav } from "@/components/Nav";
 import { Flash } from "@/components/Flash";
-import { checkNetwork } from "@/server/network";
-import { fmtDateTime } from "@/lib/time";
+import { checkNetwork, isExempt } from "@/server/network";
+import { fmtDateTime, fmtDay } from "@/lib/time";
 import { saveNetworkPolicyAction, addNetworkAction, removeNetworkAction, setNetworkExemptAction } from "@/app/actions";
 
 export const dynamic = "force-dynamic";
@@ -88,12 +88,27 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
 
         <section className="card">
           <h2>Được chấm công ngoài Wi-Fi công ty</h2>
-          <p className="muted small">Dành cho người làm từ xa, đi công tác.</p>
+          <p className="muted small">Chỉ người được admin cho phép mới chấm công được ngoài công ty. Để trống ngày = không thời hạn; có ngày thì hết ngày đó tự phải về Wi-Fi công ty.</p>
           <div className="table-wrap"><table><tbody>{staff.map((u) => (
             <tr key={u.id}>
               <td>{u.name ?? u.email}<div className="muted small">{u.email}</div></td>
-              <td>{u.networkExempt ? <span className="badge good">Được miễn</span> : <span className="muted small">Phải ở Wi-Fi công ty</span>}</td>
-              <td><form action={setNetworkExemptAction}><input type="hidden" name="userId" value={u.id} /><input type="hidden" name="exempt" value={u.networkExempt ? "0" : "1"} /><button className="btn">{u.networkExempt ? "Bỏ miễn" : "Cho miễn"}</button></form></td>
+              <td>
+                {isExempt(u)
+                  ? <span className="badge good">Được miễn{u.networkExemptUntil ? ` đến ${fmtDay(u.networkExemptUntil)}` : ""}</span>
+                  : u.networkExempt ? <span className="badge bad">Hết hạn miễn {u.networkExemptUntil ? fmtDay(u.networkExemptUntil) : ""}</span>
+                  : <span className="muted small">Phải ở Wi-Fi công ty</span>}
+              </td>
+              <td>
+                {isExempt(u) ? (
+                  <form action={setNetworkExemptAction}><input type="hidden" name="userId" value={u.id} /><input type="hidden" name="exempt" value="0" /><button className="btn">Bỏ miễn</button></form>
+                ) : (
+                  <form action={setNetworkExemptAction} className="row">
+                    <input type="hidden" name="userId" value={u.id} /><input type="hidden" name="exempt" value="1" />
+                    <label className="muted small">đến ngày <input type="date" name="until" /></label>
+                    <button className="btn">Cho miễn</button>
+                  </form>
+                )}
+              </td>
             </tr>
           ))}</tbody></table></div>
         </section>

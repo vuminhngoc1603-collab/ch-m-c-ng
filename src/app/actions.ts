@@ -91,7 +91,7 @@ export async function stealAction(form: FormData) {
   const meta = await requestMeta();
   await run("/", async () => {
     const r = await steal(u.id, str(form, "attendanceId"), new Date(), meta.ip);
-    return `Trộm được ${fmtCoins(r.amount)} xu!`;
+    return `Trộm được ${fmtCoins(r.amount)} xu!${r.notes.length ? " " + r.notes.join(", ") + "." : ""}`;
   });
 }
 
@@ -315,8 +315,16 @@ export async function setNetworkExemptAction(form: FormData) {
   const a = await requireAdmin();
   await run("/admin/network", async () => {
     const exempt = str(form, "exempt") === "1";
-    const u = await prisma.user.update({ where: { id: str(form, "userId") }, data: { networkExempt: exempt } });
-    await logActivity(a.id, "admin.network.exempt", { userId: u.id, exempt });
-    return exempt ? `${u.name ?? u.email} được chấm công ngoài Wi-Fi công ty.` : `${u.name ?? u.email} phải chấm công ở Wi-Fi công ty.`;
+    const until = str(form, "until") || null;
+    if (until && !/^\d{4}-\d{2}-\d{2}$/.test(until)) throw new AppError("Ngày hết hạn không hợp lệ.");
+    if (until && until < vn(new Date()).day) throw new AppError("Ngày hết hạn đã qua.");
+    const u = await prisma.user.update({
+      where: { id: str(form, "userId") },
+      data: { networkExempt: exempt, networkExemptUntil: exempt ? until : null },
+    });
+    await logActivity(a.id, "admin.network.exempt", { userId: u.id, exempt, until });
+    return exempt
+      ? `${u.name ?? u.email} được chấm công ngoài Wi-Fi công ty${until ? ` đến hết ngày ${until}` : " (không thời hạn)"}.`
+      : `${u.name ?? u.email} phải chấm công ở Wi-Fi công ty.`;
   });
 }

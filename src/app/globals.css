@@ -225,3 +225,12 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .job-opt:has(input:checked), .job-opt.on { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent); }
 .job-opt input { margin-top: 4px; accent-color: var(--accent); }
 .job-pick .btn { justify-content: center; }
+
+/* ---------- Kỹ năng con giáp ---------- */
+.skill-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
+.skill { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--border); border-radius: 12px; padding: 10px; opacity: .55; }
+.skill.on { opacity: 1; border-color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, transparent); }
+.skill img { width: 40px; height: 40px; object-fit: contain; flex: none; filter: grayscale(.8); }
+.skill.on img { filter: none; }
+.skill-name { font-weight: 600; margin-bottom: 2px; }
+@media (max-width: 480px) { .skill-grid { grid-template-columns: minmax(0, 1fr); } }

@@ -51,6 +51,7 @@ enum CoinType {
   STEAL_GAIN // trộm được
   STEAL_LOSS // bị trộm
   ADJUST // admin điều chỉnh
+  SKILL // kỹ năng con giáp (Sửu chăm chỉ, Tuất trực lễ, Tỵ nọc độc...)
 }
 
 enum PointType {
@@ -112,6 +113,7 @@ model User {
   missStreak    Int        @default(0) // số lần bỏ bữa liên tiếp hiện tại
   regrantOn     String? // ngày (YYYY-MM-DD) sẽ được cấp lại con mới
   networkExempt Boolean   @default(false) // được chấm công ngoài Wi-Fi công ty (làm từ xa, công tác)
+  networkExemptUntil String? // hết miễn sau ngày này (YYYY-MM-DD); null = không thời hạn
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 
@@ -128,6 +130,7 @@ model User {
   thefts        Theft[]             @relation("Thief")
   robbed        Theft[]             @relation("Victim")
   logs          ActivityLog[]
+  skillUses     SkillUse[]
 }
 
 model Account {
@@ -316,7 +319,8 @@ model MonthlySettlement {
   stealGainCoins Int
   stealLossCoins Int
   adjustCoins    Int
-  netCoins       Int // = feed + stealGain - stealLoss + adjust
+  skillCoins     Int      @default(0) // xu từ kỹ năng con giáp (tính vào thưởng như xu thường)
+  netCoins       Int // = feed + stealGain - stealLoss + adjust + skill
   points         Int // max(0, floor(net xu))
   rewardVnd      Int // tham chiếu = net xu * tỷ giá
   missedCount    Int
@@ -361,6 +365,23 @@ model Penalty {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, period])
+}
+
+// Mỗi lần kỹ năng con giáp kích hoạt. unique(userId, zodiac, refKey) để job quét chạy lại không cộng trùng.
+model SkillUse {
+  id        String   @id @default(cuid())
+  userId    String
+  zodiac    Zodiac
+  refKey    String // vd "week:2026-11-09", "att:<attendanceId>", "holiday:2026-12-31"
+  period    String // YYYY-MM, để đếm giới hạn theo tháng/quý
+  amount    Int      @default(0) // xu (cents) cộng/trừ nếu có
+  note      String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, zodiac, refKey])
+  @@index([zodiac, period])
 }
 
 // ---------- Khoá Wi-Fi công ty ----------

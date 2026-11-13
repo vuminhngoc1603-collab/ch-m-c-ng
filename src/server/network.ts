@@ -2,6 +2,7 @@ import type { User } from "@prisma/client";
 import { prisma, AppError } from "@/lib/db";
 import { ipInCidr } from "@/lib/ip";
 import { logActivity } from "./log";
+import { vn } from "@/lib/time";
 
 /**
  * Khoá Wi-Fi công ty.
@@ -41,10 +42,19 @@ export type NetworkCheck = {
   allowed: boolean;
 };
 
-export async function checkNetwork(user: Pick<User, "role" | "networkExempt">, ip: string | null): Promise<NetworkCheck> {
+type NetUser = Pick<User, "role" | "networkExempt"> & { networkExemptUntil?: string | null };
+
+/** Người được admin cho chấm công ngoài công ty, còn trong thời hạn. */
+export function isExempt(user: NetUser, now = new Date()) {
+  if (user.role === "ADMIN") return true;
+  if (!user.networkExempt) return false;
+  return !user.networkExemptUntil || vn(now).day <= user.networkExemptUntil;
+}
+
+export async function checkNetwork(user: NetUser, ip: string | null): Promise<NetworkCheck> {
   const [policy, nets] = await Promise.all([getNetworkPolicy(), prisma.allowedNetwork.findMany()]);
   const hit = nets.find((n) => ipInCidr(ip, n.cidr));
-  const exempt = user.role === "ADMIN" || user.networkExempt;
+  const exempt = isExempt(user);
   const onCompany = !!hit || exempt;
   return {
     policy,
@@ -56,7 +66,7 @@ export async function checkNetwork(user: Pick<User, "role" | "networkExempt">, i
 }
 
 /** Gọi trước khi Cho ăn / Đóng cửa. Chặn khi đang "enforce", ghi nhật ký khi "warn". */
-export async function guardCheckIn(user: Pick<User, "id" | "role" | "networkExempt">, ip: string | null, what: "feed" | "close") {
+export async function guardCheckIn(user: NetUser & { id: string }, ip: string | null, what: "feed" | "close") {
   const c = await checkNetwork(user, ip);
   if (c.policy.mode === "off" || c.network || c.exempt) return c;
   if (c.policy.mode === "warn") {

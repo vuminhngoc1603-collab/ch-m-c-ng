@@ -13,7 +13,16 @@ import { at, first, makeUser, resetDb } from "./helpers";
 // Tuần dùng để thử: T2 16/11/2026 .. CN 22/11/2026. Thứ Sáu 13/11 là ngày mở đăng ký.
 const MON = "2026-11-16", TUE = "2026-11-17", WED = "2026-11-18", THU = "2026-11-19", FRI = "2026-11-20", SAT = "2026-11-21";
 
-beforeEach(resetDb);
+// Các test luật gốc chạy với kỹ năng con giáp tắt (con đầu tiên được cấp ngẫu nhiên, kỹ năng sẽ làm lệch số liệu).
+// Kỹ năng được thử riêng trong skills.test.ts.
+beforeEach(async () => {
+  await resetDb();
+  await prisma.setting.upsert({
+    where: { key: "rules" },
+    create: { key: "rules", value: { skills: { enabled: [] } } },
+    update: { value: { skills: { enabled: [] } } },
+  });
+});
 
 async function alive(userId: string) {
   return prisma.pet.count({ where: { userId, status: "ALIVE" } });
@@ -204,7 +213,7 @@ describe("trứng & sân", () => {
     expect(pets).toHaveLength(12);
     expect(new Set(pets.map((p) => p.zodiac)).size).toBe(12);
     expect(new Set(pets.map((p) => p.slot)).size).toBe(12);
-    expect(await pointBalance(u.id)).toBe(0);
+    expect(await pointBalance(u.id)).toBe(0); // tổng giá 1320 điểm (kỹ năng Hợi đang tắt trong bộ test này)
     await expect(buyEgg(u.id, undefined, at(MON, "7:04"))).rejects.toThrow(/đủ 12/);
     const [p0, p1] = pets.sort((a, b) => a.slot - b.slot);
     await movePet(u.id, p0.id, p1.slot);

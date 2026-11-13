@@ -3,6 +3,8 @@ import { getRules } from "@/server/settings";
 import { fmtMin } from "@/lib/time";
 import { fmtVnd } from "@/lib/rules";
 import { HelpButton } from "./HelpButton";
+import { skillInfo } from "@/lib/skills";
+import { ALL_ZODIAC, ZODIAC } from "@/lib/zodiac";
 import { getNetworkPolicy } from "@/server/network";
 
 const WEEKDAY = ["Chủ nhật", "thứ Hai", "thứ Ba", "thứ Tư", "thứ Năm", "thứ Sáu", "thứ Bảy"];
@@ -72,7 +74,7 @@ export async function Help({ autoOpenKey }: { autoOpenKey?: string }) {
 
       <h3>6. Cuối tháng</h3>
       <ul>
-        <li><b>Biến động xu</b> = xu cho ăn + xu trộm được − xu bị trộm (+ điều chỉnh của admin nếu có).</li>
+        <li><b>Biến động xu</b> = xu cho ăn + xu trộm được − xu bị trộm + xu kỹ năng (+ điều chỉnh của admin nếu có).</li>
         <li>Admin dùng con số này để tính thưởng: 1 xu = {fmtVnd(rules.coinVnd)}.</li>
         <li>Biến động được đổi thành <b>điểm</b>: 1 xu = {rules.pointsPerCoin} điểm. Tháng âm thì được 0 điểm. Điểm cộng dồn sang tháng sau.</li>
       </ul>
@@ -84,7 +86,16 @@ export async function Help({ autoOpenKey }: { autoOpenKey?: string }) {
         <li>Bạn tự chọn chỗ ở cho từng con trong sân: trong mục <b>Chỗ ở trong sân</b>, bấm 1 con rồi bấm ô muốn chuyển tới.</li>
       </ul>
 
-      <h3>8. Nghỉ phép, nghỉ lễ</h3>
+      <h3>8. Kỹ năng con giáp</h3>
+      <p>Mỗi con có 1 kỹ năng, <b>chỉ có tác dụng khi con đó còn sống trong sân bạn</b>. Xu từ kỹ năng được tính vào thưởng như xu thường.</p>
+      <ul>
+        {ALL_ZODIAC.filter((z) => rules.skills.enabled.includes(z)).map((z) => {
+          const i = skillInfo(z, rules);
+          return <li key={z}><b>{ZODIAC[z].name} · {i.name}</b>: {i.text}</li>;
+        })}
+      </ul>
+
+      <h3>9. Nghỉ phép, nghỉ lễ</h3>
       <ul>
         <li>Ngày lễ chung do admin tạo: không cần cho ăn, không bị tính bỏ bữa.</li>
         <li>Nghỉ phép hoặc nghỉ lễ cá nhân: gửi đơn ở trang <b>Lịch & nghỉ phép</b>. Admin duyệt xong thì những ngày đó không tính xu, không tính bỏ bữa.</li>

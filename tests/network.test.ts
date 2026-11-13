@@ -53,3 +53,15 @@ describe("khoá Wi-Fi công ty", () => {
     await saveNetworkPolicy({ mode: "off", scope: "actions" });
   });
 });
+
+describe("miễn chấm công ngoài công ty có thời hạn", () => {
+  it("hết ngày hết hạn thì phải về Wi-Fi công ty", async () => {
+    const { isExempt } = await import("@/server/network");
+    const { at } = await import("./helpers");
+    const u = { role: "FULLTIME" as const, networkExempt: true, networkExemptUntil: "2026-11-20" };
+    expect(isExempt(u, at("2026-11-20", "23:00"))).toBe(true);
+    expect(isExempt(u, at("2026-11-21", "8:00"))).toBe(false);
+    expect(isExempt({ ...u, networkExemptUntil: null }, at("2030-01-01", "8:00"))).toBe(true);
+    expect(isExempt({ ...u, networkExempt: false }, at("2026-11-20", "8:00"))).toBe(false);
+  });
+});

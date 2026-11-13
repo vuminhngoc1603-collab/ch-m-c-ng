@@ -3,6 +3,7 @@ import { prisma, lockUser, AppError, type Tx } from "@/lib/db";
 import { feedCents, inWindow } from "@/lib/rules";
 import { vn, vnInstant, fmtMin } from "@/lib/time";
 import { getRules } from "./settings";
+import { skillsOf } from "./skills";
 import { expectedShifts } from "./schedule";
 import { logActivity } from "./log";
 
@@ -62,7 +63,8 @@ export async function feed(userId: string, now = new Date(), meta: Meta = {}) {
     await lockUser(tx, userId);
     const rules = await getRules(tx);
     const alive = await tx.pet.count({ where: { userId, status: "ALIVE" } });
-    const cents = feedCents(alive, rules);
+    const sk = await skillsOf(userId, rules, tx);
+    const cents = feedCents(alive, rules, sk.has("THIN") ? rules.skills.thinBonus : 0);
     const upd = await tx.attendance.updateMany({
       where: { id: slot.id, feedStatus: "PENDING" },
       data: { feedStatus: "FED", feedAt: now, feedIp: meta.ip ?? null, feedUa: meta.ua ?? null, coinsEarned: cents },

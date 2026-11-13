@@ -28,6 +28,37 @@ export type Rules = {
   registrationWeekday: number;
   /** Số con tối đa trong sân. */
   maxPets: number;
+  /** Kỹ năng 12 con giáp: chỉ có tác dụng khi con đó còn sống trong sân. */
+  skills: SkillRules;
+};
+
+export type SkillRules = {
+  /** Mã các con đang bật kỹ năng (TY, SUU, ...). Bỏ mã ra khỏi danh sách = tắt kỹ năng con đó. */
+  enabled: string[];
+  /** Tý: trần mỗi lần trộm (xu). */
+  tyStealMaxCoins: number;
+  /** Sửu: xu thưởng mỗi tuần không bỏ bữa nào. */
+  suuWeeklyCoins: number;
+  /** Dần: số lần quên đóng cửa được canh mỗi tháng. */
+  danPerMonth: number;
+  /** Mão: số lần đỡ chết mỗi quý (vẫn bị phạt tiền). */
+  maoPerQuarter: number;
+  /** Thìn: cộng thêm vào hệ số (không vượt hệ số tối đa). */
+  thinBonus: number;
+  /** Tỵ: người trộm sân bạn mất thêm bao nhiêu xu (bị huỷ). */
+  tiExtraCoins: number;
+  /** Ngọ: số phút đầu sau khi sân mở cửa mà chỉ người có Ngọ được trộm. */
+  ngoPriorityMinutes: number;
+  /** Mùi: % bị lấy khi bị trộm (thay cho stealPercent). */
+  muiStealPercent: number;
+  /** Thân: số lần mỗi tuần được trộm vượt giới hạn số người trộm. */
+  thanPerWeek: number;
+  /** Dậu: nhắc trước giờ cho ăn bao nhiêu phút. */
+  dauRemindMinutes: number;
+  /** Tuất: số ngày lễ chung mỗi tháng con tự cho ăn và nhận xu. */
+  tuatDaysPerMonth: number;
+  /** Hợi: % giảm giá trứng. */
+  hoiDiscountPercent: number;
 };
 
 export const DEFAULT_RULES: Rules = {
@@ -45,32 +76,55 @@ export const DEFAULT_RULES: Rules = {
   pointsPerCoin: 1,
   registrationWeekday: 5,
   maxPets: 12,
+  skills: {
+    enabled: ["TY", "SUU", "DAN", "MAO", "THIN", "TI", "NGO", "MUI", "THAN", "DAU", "TUAT", "HOI"],
+    tyStealMaxCoins: 6,
+    suuWeeklyCoins: 1,
+    danPerMonth: 1,
+    maoPerQuarter: 1,
+    thinBonus: 0.25,
+    tiExtraCoins: 1,
+    ngoPriorityMinutes: 10,
+    muiStealPercent: 7,
+    thanPerWeek: 1,
+    dauRemindMinutes: 5,
+    tuatDaysPerMonth: 2,
+    hoiDiscountPercent: 5,
+  },
 };
 
 export function mergeRules(partial: unknown): Rules {
   const p = (partial && typeof partial === "object" ? partial : {}) as Partial<Rules>;
   const r = { ...DEFAULT_RULES, ...p };
+  r.skills = { ...DEFAULT_RULES.skills, ...(p.skills && typeof p.skills === "object" ? p.skills : {}) };
+  if (!Array.isArray(r.skills.enabled)) r.skills.enabled = DEFAULT_RULES.skills.enabled;
   if (!Array.isArray(r.coefTable) || r.coefTable.length < r.maxPets) r.coefTable = DEFAULT_RULES.coefTable;
   return r;
 }
 
-/** Xu (cents, 1 xu = 100) nhận được cho 1 lần cho ăn khi sân có `alive` con. */
-export function feedCents(alive: number, rules: Rules = DEFAULT_RULES): number {
+/** Xu (cents, 1 xu = 100) nhận được cho 1 lần cho ăn khi sân có `alive` con. `bonus` = cộng thêm hệ số (kỹ năng Thìn). */
+export function feedCents(alive: number, rules: Rules = DEFAULT_RULES, bonus = 0): number {
   // Giả định: khi tạm thời chưa có con nào (đang chờ cấp lại), vẫn tính hệ số x1.
   const n = Math.max(1, Math.min(alive, rules.maxPets));
-  return Math.round(rules.coefTable[n - 1] * 100);
+  const top = rules.coefTable[rules.maxPets - 1];
+  return Math.round(Math.min(rules.coefTable[n - 1] + bonus, top) * 100);
 }
 
 /** Giá trứng (điểm) cho con kế tiếp khi đang có `alive` con: con thứ n = eggStep × (n − 1). */
-export function eggPrice(alive: number, rules: Rules = DEFAULT_RULES): number {
-  return rules.eggStep * Math.max(0, alive);
+export function eggPrice(alive: number, rules: Rules = DEFAULT_RULES, discountPercent = 0): number {
+  const base = rules.eggStep * Math.max(0, alive);
+  return discountPercent > 0 ? Math.round((base * (100 - discountPercent)) / 100) : base;
 }
 
 /** Số xu (cents) bị lấy trong 1 vụ trộm khi ví chủ sân còn `balanceCents`. */
-export function stealCents(balanceCents: number, rules: Rules = DEFAULT_RULES): number {
+export function stealCents(
+  balanceCents: number,
+  rules: Rules = DEFAULT_RULES,
+  opts: { percent?: number; maxCoins?: number } = {},
+): number {
   if (balanceCents <= 0) return 0;
-  const pct = Math.floor((balanceCents * rules.stealPercent) / 100);
-  return Math.max(0, Math.min(pct, rules.stealMaxCoins * 100));
+  const pct = Math.floor((balanceCents * (opts.percent ?? rules.stealPercent)) / 100);
+  return Math.max(0, Math.min(pct, (opts.maxCoins ?? rules.stealMaxCoins) * 100));
 }
 
 /** Con giáp có chết sau lần bỏ bữa này không. */

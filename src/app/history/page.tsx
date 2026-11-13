@@ -7,8 +7,8 @@ import { ZODIAC } from "@/lib/zodiac";
 
 export const dynamic = "force-dynamic";
 
-const COIN_TYPE = { FEED: "Cho ăn", STEAL_GAIN: "Trộm được", STEAL_LOSS: "Bị trộm", ADJUST: "Điều chỉnh" } as const;
-const POINT_TYPE = { SETTLEMENT: "Quy đổi cuối tháng", EGG_PURCHASE: "Mua trứng", ADJUST: "Điều chỉnh" } as const;
+const COIN_TYPE = { FEED: "Cho ăn", STEAL_GAIN: "Trộm được", STEAL_LOSS: "Bị trộm", ADJUST: "Điều chỉnh", SKILL: "Kỹ năng con giáp" } as const;
+const POINT_TYPE = { SETTLEMENT: "Quy đổi cuối tháng", EGG_PURCHASE: "Mua trứng", ADJUST: "Điều chỉnh", SKILL: "Kỹ năng con giáp" } as const;
 const FEED = { PENDING: "Chưa tới", FED: "Đã cho ăn", MISSED: "Bỏ bữa", EXCUSED: "Miễn" } as const;
 const CLOSE = { NONE: "—", PENDING: "Chưa đóng", CLOSED: "Đã đóng", FORGOT: "Quên đóng", SKIPPED: "—" } as const;
 

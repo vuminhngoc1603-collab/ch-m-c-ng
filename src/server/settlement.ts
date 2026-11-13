@@ -12,6 +12,7 @@ export type MonthRow = {
   stealGainCoins: number;
   stealLossCoins: number;
   adjustCoins: number;
+  skillCoins: number;
   netCoins: number;
   points: number;
   rewardVnd: number;
@@ -21,7 +22,7 @@ export type MonthRow = {
   settled: boolean;
 };
 
-/** Biến động xu trong tháng = cho ăn + trộm được − bị trộm (+ điều chỉnh của admin nếu có). */
+/** Biến động xu trong tháng = cho ăn + trộm được − bị trộm + xu kỹ năng (+ điều chỉnh của admin nếu có). */
 export async function computeMonth(period: string, rules?: Rules): Promise<MonthRow[]> {
   rules ??= await getRules();
   const users = await prisma.user.findMany({
@@ -39,7 +40,7 @@ export async function computeMonth(period: string, rules?: Rules): Promise<Month
     if (s) {
       return {
         userId: u.id, name: u.name ?? u.email, email: u.email, role: u.role,
-        feedCoins: s.feedCoins, stealGainCoins: s.stealGainCoins, stealLossCoins: s.stealLossCoins, adjustCoins: s.adjustCoins,
+        feedCoins: s.feedCoins, stealGainCoins: s.stealGainCoins, stealLossCoins: s.stealLossCoins, adjustCoins: s.adjustCoins, skillCoins: s.skillCoins,
         netCoins: s.netCoins, points: s.points, rewardVnd: s.rewardVnd, missedCount: s.missedCount,
         deathCount: s.deathCount, penaltyVnd: s.penaltyVnd, settled: true,
       };
@@ -49,11 +50,12 @@ export async function computeMonth(period: string, rules?: Rules): Promise<Month
     const stealGainCoins = sum("STEAL_GAIN");
     const stealLossCoins = -sum("STEAL_LOSS");
     const adjustCoins = sum("ADJUST");
-    const netCoins = feedCoins + stealGainCoins - stealLossCoins + adjustCoins;
+    const skillCoins = sum("SKILL");
+    const netCoins = feedCoins + stealGainCoins - stealLossCoins + adjustCoins + skillCoins;
     const p = pen.find((x) => x.userId === u.id);
     return {
       userId: u.id, name: u.name ?? u.email, email: u.email, role: u.role,
-      feedCoins, stealGainCoins, stealLossCoins, adjustCoins, netCoins,
+      feedCoins, stealGainCoins, stealLossCoins, adjustCoins, skillCoins, netCoins,
       points: pointsFromNet(netCoins, rules),
       rewardVnd: Math.round((netCoins * rules.coinVnd) / 100),
       missedCount: missed.find((m) => m.userId === u.id)?._count ?? 0,
@@ -77,7 +79,7 @@ export async function settleMonth(period: string) {
       const s = await tx.monthlySettlement.create({
         data: {
           userId: r.userId, period, feedCoins: r.feedCoins, stealGainCoins: r.stealGainCoins, stealLossCoins: r.stealLossCoins,
-          adjustCoins: r.adjustCoins, netCoins: r.netCoins, points: r.points, rewardVnd: r.rewardVnd,
+          adjustCoins: r.adjustCoins, skillCoins: r.skillCoins, netCoins: r.netCoins, points: r.points, rewardVnd: r.rewardVnd,
           missedCount: r.missedCount, deathCount: r.deathCount, penaltyVnd: r.penaltyVnd,
         },
       });
@@ -93,11 +95,11 @@ export async function settleMonth(period: string) {
 }
 
 export function toCsv(rows: MonthRow[]): string {
-  const head = ["Họ tên", "Email", "Vai trò", "Xu cho ăn", "Xu trộm được", "Xu bị trộm", "Điều chỉnh", "Biến động xu", "Điểm", "Thưởng tham chiếu (đ)", "Lần bỏ bữa", "Con chết", "Phạt (đ)", "Đã chốt"];
+  const head = ["Họ tên", "Email", "Vai trò", "Xu cho ăn", "Xu trộm được", "Xu bị trộm", "Điều chỉnh", "Xu kỹ năng", "Biến động xu", "Điểm", "Thưởng tham chiếu (đ)", "Lần bỏ bữa", "Con chết", "Phạt (đ)", "Đã chốt"];
   const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
   const c = (x: number) => (x / 100).toFixed(2);
   const lines = rows.map((r) =>
-    [r.name, r.email, r.role ?? "", c(r.feedCoins), c(r.stealGainCoins), c(r.stealLossCoins), c(r.adjustCoins), c(r.netCoins), r.points, r.rewardVnd, r.missedCount, r.deathCount, r.penaltyVnd, r.settled ? "x" : ""].map(esc).join(","),
+    [r.name, r.email, r.role ?? "", c(r.feedCoins), c(r.stealGainCoins), c(r.stealLossCoins), c(r.adjustCoins), c(r.skillCoins), c(r.netCoins), r.points, r.rewardVnd, r.missedCount, r.deathCount, r.penaltyVnd, r.settled ? "x" : ""].map(esc).join(","),
   );
   return "﻿" + [head.map(esc).join(","), ...lines].join("\n");
 }

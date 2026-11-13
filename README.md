@@ -128,6 +128,27 @@ npm test      # 20 test: hệ số, giá trứng, trộm, chết, đăng ký ca,
 4. **Deploy.** Lệnh `vercel-build` tự tạo bảng (`prisma migrate deploy`), nạp danh mục ca và luật mặc định, rồi build.
 5. (Nên làm) Tạo cron ngoài ở [cron-job.org](https://cron-job.org) gọi `https://<tên-project>.vercel.app/api/cron?secret=<CRON_SECRET>` mỗi 5 phút để ghi nhận bỏ bữa/quên đóng cửa đúng giờ. Không có cũng chạy được: hệ thống tự quét khi có người mở trang, và Vercel cron chạy 1 lần lúc 0h.
 
+## Kỹ năng 12 con giáp
+
+Mỗi con 1 kỹ năng, chỉ có tác dụng khi con đó còn sống. Con số nằm trong Rules Engine (`skills` trong trang Cấu hình); bỏ mã con khỏi `skills.enabled` để tắt kỹ năng đó.
+
+| Con | Kỹ năng | Tác dụng |
+|---|---|---|
+| Tý | Tay nhanh | Trộm mỗi lần tối đa 6 xu (thường 5) |
+| Sửu | Cần cù | Tuần đi làm không bỏ bữa nào: +1 xu |
+| Dần | Gầm canh cửa | Lần quên đóng cửa đầu tiên mỗi tháng: không ai trộm được |
+| Mão | Chín mạng | 1 lần/quý đỡ chết, **vẫn phạt 300k** |
+| Thìn | Uy rồng | Hệ số +0,25, không vượt x4 |
+| Tỵ | Nọc độc | Người trộm sân bạn mất thêm 1 xu (bị huỷ) |
+| Ngọ | Phi nước đại | 10 phút đầu khi sân mở cửa, chỉ người có Ngọ được trộm |
+| Mùi | Hiền lành | Bị trộm 7% thay vì 10% |
+| Thân | Láu lỉnh | 1 lần/tuần được làm người trộm thứ 4 |
+| Dậu | Gáy sáng | Nhắc trên trang 5 phút trước giờ cho ăn |
+| Tuất | Trung thành | Ngày lễ chung tự cho ăn, nhận xu như đi làm (tối đa 2 ngày/tháng) |
+| Hợi | Phúc hậu | Mua trứng giảm 5% điểm |
+
+Xu từ kỹ năng ghi vào sổ cái loại `SKILL`, **tính vào biến động tháng và thưởng như xu thường** (cột "Kỹ năng" trên báo cáo/CSV). Mỗi lần kích hoạt ghi vào bảng `SkillUse` (unique theo người + con + mã sự kiện nên job quét chạy lại không cộng trùng).
+
 ## Mở rộng sau
 
 Kỹ năng ẩn của 12 con giáp (gồm con tự cho ăn ngày nghỉ lễ) và giao nhiệm vụ: cắm thêm vào Rules Engine (`src/lib/rules.ts`) và dùng chung sổ cái xu.

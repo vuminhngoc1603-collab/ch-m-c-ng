@@ -6,6 +6,8 @@ import { addDays, periodOf, vn } from "@/lib/time";
 import { getRules } from "./settings";
 import { pointBalance } from "./wallet";
 import { logActivity } from "./log";
+import { skillsOf, countUses, quarterPeriods } from "./skills";
+import { skillOn } from "@/lib/skills";
 
 export type Rng = () => number;
 
@@ -54,6 +56,23 @@ export async function killRandomPet(
 ) {
   const alive = await alivePets(userId, tx);
   if (alive.length === 0) return null;
+  const v0 = vn(now);
+  const period0 = periodOf(day ?? v0.day);
+  // Kỹ năng Mão "Chín mạng": đỡ chết vài lần mỗi quý, nhưng vẫn bị phạt tiền.
+  if (alive.some((p) => p.zodiac === "MAO") && skillOn("MAO", rules)) {
+    const used = await countUses(tx, userId, "MAO", { periods: quarterPeriods(period0) });
+    if (used < rules.skills.maoPerQuarter) {
+      const mao = alive.find((p) => p.zodiac === "MAO")!;
+      await tx.skillUse.create({
+        data: { userId, zodiac: "MAO", refKey: `save:${day ?? v0.day}:${now.getTime()}:${used}`, period: period0, note: `Đỡ chết (${reason})` },
+      });
+      await tx.penalty.create({
+        data: { userId, petId: mao.id, amountVnd: rules.penaltyVnd, period: period0, reason: `Mão đỡ đòn, không con nào chết (${reason}). Vẫn phạt.` },
+      });
+      await logActivity(userId, "skill.mao", { reason }, null, tx);
+      return null;
+    }
+  }
   const victim = pick(alive, rng);
   await tx.pet.update({
     where: { id: victim.id },
@@ -83,7 +102,8 @@ export async function buyEgg(userId: string, slot: number | undefined, now = new
     const rules = await getRules(tx);
     const alive = await alivePets(userId, tx);
     if (alive.length >= rules.maxPets) throw new AppError("Sân đã đủ 12 con giáp.");
-    const price = eggPrice(alive.length, rules);
+    const sk = await skillsOf(userId, rules, tx);
+    const price = eggPrice(alive.length, rules, sk.has("HOI") ? rules.skills.hoiDiscountPercent : 0);
     const balance = await pointBalance(userId, tx);
     if (balance < price) throw new AppError(`Chưa đủ điểm: trứng giá ${price} điểm, bạn có ${balance} điểm.`);
     const pet = await grantRandomPet(tx, userId, "EGG", rules, { slot, rng, now });
