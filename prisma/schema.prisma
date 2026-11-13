@@ -1,0 +1,384 @@
+// Hệ thống chấm công bằng nuôi 12 con giáp
+// Quy ước:
+//  - Mọi số xu lưu dạng số nguyên "phần trăm xu" (cents): 1 xu = 100. Ví dụ 1,25 xu = 125.
+//  - Ngày làm việc lưu dạng chuỗi "YYYY-MM-DD" theo giờ Việt Nam (UTC+7).
+//  - Giờ trong ngày lưu dạng số phút kể từ 0h (vd 8h30 = 510).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  FULLTIME
+  PARTTIME
+}
+
+enum UserStatus {
+  PENDING // vừa đăng nhập Google lần đầu, chờ admin duyệt
+  ACTIVE
+  DISABLED
+}
+
+enum ShiftKind {
+  FULLTIME
+  PARTTIME
+}
+
+enum FeedStatus {
+  PENDING // chưa tới hạn / chưa cho ăn
+  FED // đã cho ăn đúng khung
+  MISSED // bỏ bữa
+  EXCUSED // được miễn (nghỉ phép được duyệt sau khi đã tạo lượt)
+}
+
+enum CloseStatus {
+  NONE // lượt này không có khung đóng cửa (vd nhịp sáng full-time)
+  PENDING
+  CLOSED
+  FORGOT // quên đóng cửa -> mở cửa sổ trộm xu
+  SKIPPED // không cần đóng (không đi làm lượt đó)
+}
+
+enum CoinType {
+  FEED // cho ăn
+  STEAL_GAIN // trộm được
+  STEAL_LOSS // bị trộm
+  ADJUST // admin điều chỉnh
+}
+
+enum PointType {
+  SETTLEMENT // quy đổi biến động xu cuối tháng
+  EGG_PURCHASE // mua trứng
+  ADJUST
+}
+
+enum Zodiac {
+  TY // Tý
+  SUU // Sửu
+  DAN // Dần
+  MAO // Mão
+  THIN // Thìn
+  TI // Tỵ
+  NGO // Ngọ
+  MUI // Mùi
+  THAN // Thân
+  DAU // Dậu
+  TUAT // Tuất
+  HOI // Hợi
+}
+
+enum PetSource {
+  FREE // con đầu tiên khi được duyệt
+  REGRANT // cấp lại khi con duy nhất chết
+  EGG // nở từ trứng mua bằng điểm
+}
+
+enum PetStatus {
+  ALIVE
+  DEAD
+}
+
+enum LeaveType {
+  LEAVE // nghỉ phép cá nhân
+  HOLIDAY // nghỉ lễ cá nhân (ngoài lịch lễ chung)
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ---------- Identity ----------
+
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  name          String?
+  image         String?
+  emailVerified DateTime?
+  role          Role?
+  status        UserStatus @default(PENDING)
+  approvedAt    DateTime?
+  approvedById  String?
+  missStreak    Int        @default(0) // số lần bỏ bữa liên tiếp hiện tại
+  regrantOn     String? // ngày (YYYY-MM-DD) sẽ được cấp lại con mới
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  registrations ShiftRegistration[] @relation("RegistrationUser")
+  attendances   Attendance[]
+  coins         CoinLedger[]
+  points        PointLedger[]
+  pets          Pet[]
+  penalties     Penalty[]
+  leaves        LeaveRequest[]      @relation("LeaveUser")
+  settlements   MonthlySettlement[]
+  thefts        Theft[]             @relation("Thief")
+  robbed        Theft[]             @relation("Victim")
+  logs          ActivityLog[]
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+// ---------- Schedule ----------
+
+// Danh mục ca / nhịp cho ăn. Giờ là dữ liệu cấu hình, admin chỉnh được.
+model Shift {
+  id         String    @id @default(cuid())
+  code       String    @unique // FT_AM, FT_PM, P1..P5
+  name       String
+  kind       ShiftKind
+  feedStart  Int // phút kể từ 0h
+  feedEnd    Int
+  closeStart Int? // null = lượt này không có khung đóng cửa
+  closeEnd   Int?
+  sortOrder  Int       @default(0)
+  active     Boolean   @default(true)
+
+  registrations ShiftRegistration[]
+  attendances   Attendance[]
+}
+
+// Part-time đăng ký ca cho tuần kế tiếp (chỉ trong ngày thứ Sáu).
+model ShiftRegistration {
+  id          String   @id @default(cuid())
+  userId      String
+  day         String // YYYY-MM-DD
+  shiftId     String
+  createdById String // người tạo (chính chủ hoặc admin đổi hộ)
+  note        String?
+  createdAt   DateTime @default(now())
+
+  user  User  @relation("RegistrationUser", fields: [userId], references: [id], onDelete: Cascade)
+  shift Shift @relation(fields: [shiftId], references: [id])
+
+  @@unique([userId, day, shiftId])
+  @@index([day])
+}
+
+// Ngày nghỉ lễ chung cho toàn công ty (admin tạo).
+model Holiday {
+  day       String   @id // YYYY-MM-DD
+  name      String
+  createdAt DateTime @default(now())
+}
+
+// Nghỉ phép / nghỉ lễ cá nhân, admin duyệt.
+model LeaveRequest {
+  id           String         @id @default(cuid())
+  userId       String
+  type         LeaveType      @default(LEAVE)
+  startDay     String
+  endDay       String
+  reason       String?
+  status       ApprovalStatus @default(PENDING)
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime       @default(now())
+
+  user User @relation("LeaveUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startDay])
+}
+
+// ---------- Attendance ----------
+
+// Một "lượt" bắt buộc: 1 nhịp cho ăn (+ khung đóng cửa nếu có) của 1 người trong 1 ngày.
+model Attendance {
+  id          String      @id @default(cuid())
+  userId      String
+  day         String // YYYY-MM-DD
+  shiftId     String
+  feedStatus  FeedStatus  @default(PENDING)
+  feedAt      DateTime?
+  feedIp      String?
+  feedUa      String?
+  coinsEarned Int         @default(0) // cents
+  closeStatus CloseStatus @default(PENDING)
+  closeAt     DateTime?
+  closeIp     String?
+  closeUa     String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shift  Shift   @relation(fields: [shiftId], references: [id])
+  thefts Theft[]
+
+  @@unique([userId, day, shiftId])
+  @@index([day, closeStatus])
+  @@index([feedStatus])
+}
+
+// ---------- Wallet (sổ cái xu, chỉ ghi thêm) ----------
+
+model CoinLedger {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Int // cents, có dấu
+  type        CoinType
+  period      String // YYYY-MM theo giờ VN, để quyết toán tháng
+  reason      String?
+  refId       String? // attendanceId / theftId
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, period])
+}
+
+model Theft {
+  id           String   @id @default(cuid())
+  attendanceId String // lượt quên đóng cửa
+  victimId     String
+  thiefId      String
+  amount       Int // cents
+  createdAt    DateTime @default(now())
+
+  attendance Attendance @relation(fields: [attendanceId], references: [id], onDelete: Cascade)
+  victim     User       @relation("Victim", fields: [victimId], references: [id], onDelete: Cascade)
+  thief      User       @relation("Thief", fields: [thiefId], references: [id], onDelete: Cascade)
+
+  @@unique([attendanceId, thiefId])
+}
+
+// ---------- Points & Settlement ----------
+
+model PointLedger {
+  id          String    @id @default(cuid())
+  userId      String
+  amount      Int // điểm nguyên, có dấu
+  type        PointType
+  period      String?
+  reason      String?
+  refId       String?
+  createdById String?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Báo cáo chốt theo tháng để admin tính thưởng. Không đổi khi người dùng tiêu điểm.
+model MonthlySettlement {
+  id             String   @id @default(cuid())
+  userId         String
+  period         String // YYYY-MM
+  feedCoins      Int // cents
+  stealGainCoins Int
+  stealLossCoins Int
+  adjustCoins    Int
+  netCoins       Int // = feed + stealGain - stealLoss + adjust
+  points         Int // max(0, floor(net xu))
+  rewardVnd      Int // tham chiếu = net xu * tỷ giá
+  missedCount    Int
+  deathCount     Int
+  penaltyVnd     Int
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, period])
+  @@index([period])
+}
+
+// ---------- Yard ----------
+
+model Pet {
+  id          String    @id @default(cuid())
+  userId      String
+  zodiac      Zodiac
+  slot        Int // vị trí trong sân 0..11
+  status      PetStatus @default(ALIVE)
+  source      PetSource
+  acquiredAt  DateTime  @default(now())
+  diedAt      DateTime?
+  deathReason String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+}
+
+// Phạt 300k mỗi lần con giáp chết: chỉ ghi chú, trừ lương, không liên quan xu.
+model Penalty {
+  id        String   @id @default(cuid())
+  userId    String
+  petId     String?
+  amountVnd Int
+  period    String
+  reason    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, period])
+}
+
+// ---------- Rules engine & logs ----------
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  meta      Json?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([action])
+}
