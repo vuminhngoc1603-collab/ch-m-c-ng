@@ -24,6 +24,14 @@ Quên đóng cửa thì đồng nghiệp được trộm xu, bỏ bữa thì con
 
 Mọi mốc giờ tính theo giờ Việt Nam (UTC+7) và lấy giờ máy chủ.
 
+## Khu vườn có con giáp đi lại
+
+- Ảnh con giáp đã tách nền nằm ở `public/zodiac/<ma>.webp` (ty, suu, dan, mao, thin, ti, ngo, mui, than, dau, tuat, hoi). Ảnh nền ở `public/garden/`.
+- `src/components/Garden.tsx`: mỗi con đi loanh quanh **chỗ ở** của mình (ô 1–12 người dùng chọn), thỉnh thoảng đi xa; nhún khi đi, quay mặt theo hướng đi, xa nhỏ gần to, con gần đè lên con xa. Bấm vào con giáp để hiện tên.
+- Vùng đất đi lại được khai báo trong mảng `SCENES` (hình thang theo phối cảnh). Thêm ảnh nền mới: thêm 1 phần tử vào mảng và chỉnh `top/bottom/center/topHalf/bottomHalf`.
+- Con giáp đói đi chậm và nhạt màu, nguy kịch thì xám. Người bật "giảm chuyển động" trong hệ điều hành sẽ thấy con giáp đứng yên.
+- Thay ảnh một con giáp: ghi đè file webp cùng tên (nên tách nền, cao khoảng 360px).
+
 ## Giả định đã chọn (chưa có trong đặc tả)
 
 1. **Quên đóng cửa chỉ tính khi hôm đó có đi làm** (đã cho ăn ít nhất 1 lượt). Không đi làm cả ngày thì không bị mở cửa cho trộm, vì đã bị tính bỏ bữa.

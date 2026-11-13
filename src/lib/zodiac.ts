@@ -17,3 +17,8 @@ export const ZODIAC: Record<Zodiac, { name: string; emoji: string; order: number
 };
 
 export const ALL_ZODIAC = Object.keys(ZODIAC) as Zodiac[];
+
+/** Ảnh cố định (đã tách nền) của từng con giáp, nằm trong public/zodiac. */
+export function zodiacImage(z: Zodiac): string {
+  return `/zodiac/${z.toLowerCase()}.webp`;
+}

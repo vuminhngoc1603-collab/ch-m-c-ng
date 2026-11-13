@@ -90,8 +90,8 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .flash { padding: 10px 14px; border-radius: 10px; margin-bottom: 16px; font-weight: 500; }
 .flash.ok { background: var(--good-bg); color: var(--good); }
 .flash.err { background: var(--bad-bg); color: var(--bad); }
-.yard { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: var(--grass); border: 1px solid var(--grass-line); border-radius: var(--radius); padding: 12px; }
-.pen { aspect-ratio: 1; border-radius: 12px; border: 2px dashed var(--grass-line); display: grid; place-items: center; text-align: center; background: transparent; font: inherit; color: var(--muted); cursor: pointer; padding: 4px; }
+.yard { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; background: var(--grass); border: 1px solid var(--grass-line); border-radius: var(--radius); padding: 12px; }
+.pen { min-width: 0; overflow: hidden; aspect-ratio: 1; border-radius: 12px; border: 2px dashed var(--grass-line); display: grid; place-items: center; text-align: center; background: transparent; font: inherit; color: var(--muted); cursor: pointer; padding: 4px; }
 .pen.filled { border-style: solid; background: var(--surface); color: var(--text); }
 .pen.selected { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
 .pen .emoji { font-size: clamp(26px, 6vw, 44px); line-height: 1.1; }
@@ -112,3 +112,29 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   .yard { gap: 6px; padding: 8px; }
   .pen .name { font-size: 11px; }
 }
+
+/* ---------- Khu vườn có con giáp đi lại ---------- */
+.garden-tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--border); background: var(--surface); color: var(--muted); border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+.chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.garden { position: relative; width: 100%; margin: 0 auto; background-size: cover; background-position: center; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); container-type: inline-size; }
+.garden-empty { position: absolute; inset: auto 0 8% 0; text-align: center; color: #fff; text-shadow: 0 1px 4px #0008; font-weight: 600; }
+.critter { position: absolute; transform: translate(-50%, -100%); transition-property: left, top, width; transition-timing-function: linear; background: none; border: 0; padding: 0; cursor: pointer; }
+.critter img { display: block; width: 100%; height: auto; pointer-events: none; user-select: none; filter: drop-shadow(0 2px 3px #0004); }
+.critter-body { display: block; transition: transform .2s; }
+.critter-body img { animation: breathe 3s ease-in-out infinite; transform-origin: 50% 100%; }
+.critter.walking .critter-body img { animation: hop .42s ease-in-out infinite; }
+.critter-shadow { position: absolute; left: 15%; right: 15%; bottom: -3%; height: 9%; border-radius: 50%; background: radial-gradient(#0005, transparent 70%); }
+.critter.mood-hungry img { filter: drop-shadow(0 2px 3px #0004) saturate(.6); }
+.critter.mood-critical img { filter: drop-shadow(0 2px 3px #0004) grayscale(.7) brightness(.9); }
+.critter.mood-critical.walking .critter-body img { animation-duration: .8s; }
+.bubble { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #fff; color: #2b2118; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; box-shadow: 0 2px 6px #0003; animation: pop .25s ease-out; }
+@keyframes hop { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-9%) rotate(2deg); } }
+@keyframes breathe { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(.97); } }
+@keyframes pop { from { transform: translate(-50%, 6px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .critter { transition: none; }
+  .critter img, .critter.walking .critter-body img { animation: none; }
+}
+.pen > span { display: block; width: 100%; }
+.pen .pet-img { width: 62%; height: auto; display: block; margin: 0 auto; }

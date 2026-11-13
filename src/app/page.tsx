@@ -10,7 +10,8 @@ import { stealableYards } from "@/server/theft";
 import { getRules } from "@/server/settings";
 import { eggPrice, feedCents, fmtCoins, inWindow } from "@/lib/rules";
 import { fmtDay, fmtMin, fmtDateTime, vn } from "@/lib/time";
-import { ZODIAC } from "@/lib/zodiac";
+import { ZODIAC, zodiacImage } from "@/lib/zodiac";
+import { Garden } from "@/components/Garden";
 import { feedAction, closeAction, stealAction, buyEggAction } from "@/app/actions";
 
 export const dynamic = "force-dynamic";
@@ -74,6 +75,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ o
           <div className="stat"><div className="label">Bỏ bữa tháng này</div><div className="value">{monthMisses}</div><div className="muted small">liên tiếp: {me.missStreak}</div></div>
         </div>
 
+        <section className="card">
+          <div className="row space"><h2>Khu vườn của tôi</h2><span className="muted small">Bấm vào con giáp để xem tên</span></div>
+          <Garden mood={mood} pets={pets.map((p) => ({ id: p.id, slot: p.slot, img: zodiacImage(p.zodiac), name: ZODIAC[p.zodiac].name }))} />
+        </section>
+
         <div className="grid cols-2">
           <section className="card">
             <h2>Hôm nay</h2>
@@ -106,11 +112,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ o
           </section>
 
           <section className="card">
-            <div className="row space"><h2>Sân của tôi</h2><span className="muted small">{pets.length}/{rules.maxPets}</span></div>
+            <div className="row space"><h2>Chỗ ở trong sân</h2><span className="muted small">{pets.length}/{rules.maxPets}</span></div>
             <Yard
               size={rules.maxPets}
               mood={mood}
-              pets={pets.map((p) => ({ id: p.id, slot: p.slot, emoji: ZODIAC[p.zodiac].emoji, name: ZODIAC[p.zodiac].name }))}
+              pets={pets.map((p) => ({ id: p.id, slot: p.slot, img: zodiacImage(p.zodiac), name: ZODIAC[p.zodiac].name }))}
             />
             <form action={buyEggAction} className="row" style={{ marginTop: 14 }}>
               <button className="btn primary" disabled={pets.length >= rules.maxPets || points < price}>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { movePetAction } from "@/app/actions";
 
-type P = { id: string; emoji: string; name: string; slot: number };
+type P = { id: string; img: string; name: string; slot: number };
 
 /** Sân 4×3: bấm một con để chọn, rồi bấm ô khác để chuyển (ô có con thì đổi chỗ). */
 export function Yard({ pets, size, mood }: { pets: P[]; size: number; mood: "ok" | "hungry" | "critical" }) {
@@ -20,19 +20,19 @@ export function Yard({ pets, size, mood }: { pets: P[]; size: number; mood: "ok"
           if (sel && !isSel) {
             return (
               <button key={i} className={cls} type="submit" name="slot" value={i} title="Chuyển tới đây">
-                {p ? <span><div className="emoji">{p.emoji}</div><div className="name">{p.name}</div></span> : <span className="small">Đặt ở đây</span>}
+                {p ? <span><img className="pet-img" src={p.img} alt="" /><div className="name">{p.name}</div></span> : <span className="small">Đặt ở đây</span>}
               </button>
             );
           }
           return (
             <button key={i} className={cls} type="button" onClick={() => p && setSel(isSel ? null : p.id)} title={p ? "Bấm để chọn rồi chuyển chỗ" : "Chỗ trống"}>
-              {p ? <span><div className="emoji">{p.emoji}</div><div className="name">{p.name}</div></span> : <span className="small">Trống</span>}
+              {p ? <span><img className="pet-img" src={p.img} alt="" /><div className="name">{p.name}</div></span> : <span className="small">Trống</span>}
             </button>
           );
         })}
       </div>
       <p className="muted small" style={{ marginBottom: 0 }}>
-        {sel ? "Bấm vào ô muốn chuyển tới (ô có con thì hai con đổi chỗ). Bấm lại con đang chọn để huỷ." : "Bấm vào một con giáp để đổi chỗ ở trong sân."}
+        {sel ? "Bấm vào ô muốn chuyển tới (ô có con thì hai con đổi chỗ). Bấm lại con đang chọn để huỷ." : "Mỗi ô là chỗ ở của con giáp trong vườn: con giáp đi loanh quanh chỗ ở của mình. Bấm vào một con để đổi chỗ."}
       </p>
     </form>
   );
