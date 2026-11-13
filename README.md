@@ -99,12 +99,17 @@ npm test      # 20 test: hệ số, giá trứng, trộm, chết, đăng ký ca,
    - Authorized redirect URIs: `http://localhost:3000/api/auth/callback/google` và `https://<domain-của-bạn>/api/auth/callback/google`
 4. Chép Client ID / Secret vào `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`.
 
-## Deploy (gợi ý: Vercel + Neon/Supabase, đều có gói miễn phí)
+## Deploy lên Vercel + Neon (miễn phí)
 
-1. Tạo database Postgres trên Neon hoặc Supabase, lấy chuỗi kết nối (pooled → `DATABASE_URL`, direct → `DIRECT_URL`).
-2. Import repo vào Vercel, đặt các biến môi trường như `.env.example` (`AUTH_SECRET` tạo bằng `npx auth secret`).
-3. Build command: `npx prisma migrate deploy && npm run build`. Sau lần deploy đầu, chạy `npm run db:seed` một lần với `DATABASE_URL` của production.
-4. Job quét: `vercel.json` đã có cron hằng ngày lúc 0h (giờ VN) cho gói Hobby. Để ghi nhận bỏ bữa/quên đóng cửa đúng giờ, nên thêm một cron ngoài (vd cron-job.org) gọi `https://<domain>/api/cron?secret=<CRON_SECRET>` mỗi 5 phút.
+1. **Vercel:** đăng nhập [vercel.com](https://vercel.com) bằng GitHub → *Add New → Project* → chọn repo này → chưa bấm Deploy vội.
+2. **Database:** trong project Vercel → tab *Storage* → *Create Database* → **Neon** (Postgres) → Connect. Vercel tự thêm `DATABASE_URL` và `DATABASE_URL_UNPOOLED`.
+3. **Biến môi trường** (*Settings → Environment Variables*):
+   - `AUTH_SECRET`: chuỗi ngẫu nhiên dài (vd tạo bằng `openssl rand -base64 32`)
+   - `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`: xem mục Google OAuth ở trên, redirect URI là `https://<tên-project>.vercel.app/api/auth/callback/google`
+   - `ADMIN_EMAILS`: Gmail của bạn (tự thành admin khi đăng nhập lần đầu)
+   - `CRON_SECRET`: chuỗi ngẫu nhiên bất kỳ
+4. **Deploy.** Lệnh `vercel-build` tự tạo bảng (`prisma migrate deploy`), nạp danh mục ca và luật mặc định, rồi build.
+5. (Nên làm) Tạo cron ngoài ở [cron-job.org](https://cron-job.org) gọi `https://<tên-project>.vercel.app/api/cron?secret=<CRON_SECRET>` mỗi 5 phút để ghi nhận bỏ bữa/quên đóng cửa đúng giờ. Không có cũng chạy được: hệ thống tự quét khi có người mở trang, và Vercel cron chạy 1 lần lúc 0h.
 
 ## Mở rộng sau
 
