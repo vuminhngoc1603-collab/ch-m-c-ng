@@ -24,6 +24,17 @@ Quên đóng cửa thì đồng nghiệp được trộm xu, bỏ bữa thì con
 
 Mọi mốc giờ tính theo giờ Việt Nam (UTC+7) và lấy giờ máy chủ.
 
+## Khoá Wi-Fi công ty
+
+Trang **Wi-Fi** của admin (`/admin/network`). Trình duyệt không cho web đọc tên Wi-Fi, nên hệ thống nhận ra Wi-Fi công ty qua **IP công cộng** của đường mạng đó (cần IP tĩnh).
+
+1. Admin đứng ở công ty, bắt Wi-Fi công ty, bấm **Thêm Wi-Fi đang kết nối** (hoặc nhập IP/dải IP bằng tay). Mỗi Wi-Fi/đường mạng thêm 1 dòng.
+2. Chọn mức khoá: **Tắt** (mặc định) · **Chỉ cảnh báo** (vẫn cho chấm công, ghi lại lượt ngoài Wi-Fi) · **Chặn**.
+3. Chọn phạm vi: chỉ khoá **Cho ăn / Đóng cửa**, hoặc khoá **cả đăng nhập** (nhân viên ngoài Wi-Fi công ty thấy trang "Hãy kết nối Wi-Fi công ty").
+4. Người làm từ xa: bấm **Cho miễn**. Admin không bao giờ bị khoá.
+
+IP lấy từ header `x-real-ip` / `x-forwarded-for` mà Vercel tự ghi đè, client không giả được. Nếu chạy sau proxy khác, kiểm tra lại proxy có ghi đè các header này không.
+
 ## Hướng dẫn cho người chơi
 
 - Nút **?** trên thanh menu (và ở trang đăng nhập, trang chờ duyệt) mở bảng hướng dẫn đầy đủ: `src/components/Help.tsx`. Nhân viên mới vào lần đầu sẽ tự thấy bảng này.

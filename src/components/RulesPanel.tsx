@@ -4,14 +4,16 @@ import { getRules } from "@/server/settings";
 import { fmtMin } from "@/lib/time";
 import { fmtVnd } from "@/lib/rules";
 import { Help } from "./Help";
+import { getNetworkPolicy } from "@/server/network";
 
 const WEEKDAY = ["Chủ nhật", "thứ Hai", "thứ Ba", "thứ Tư", "thứ Năm", "thứ Sáu", "thứ Bảy"];
 
 /** Khung quy tắc tóm tắt đặt cạnh khu vườn, theo đúng loại công việc của người xem. */
 export async function RulesPanel({ role }: { role: Role }) {
-  const [rules, shifts] = await Promise.all([
+  const [rules, shifts, net] = await Promise.all([
     getRules(),
     prisma.shift.findMany({ where: { active: true, kind: role === "PARTTIME" ? "PARTTIME" : "FULLTIME" }, orderBy: { sortOrder: "asc" } }),
+    getNetworkPolicy(),
   ]);
   const span = (a: number, b: number) => `${fmtMin(a)}–${fmtMin(b)}`;
   const coef = rules.coefTable;
@@ -28,6 +30,7 @@ export async function RulesPanel({ role }: { role: Role }) {
         <ul>
           <li>Tới làm: bấm <b>🍚 Cho ăn</b> đúng khung giờ để nhận xu.</li>
           <li>Tan làm: bấm <b>🔒 Đóng cửa</b>, nếu không sẽ bị trộm xu.</li>
+          {net.mode !== "off" && <li>Phải dùng <b>Wi-Fi công ty</b> khi bấm.</li>}
         </ul>
         {role === "PARTTIME" ? (
           <>

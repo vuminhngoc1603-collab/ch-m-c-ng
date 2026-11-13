@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
-import { requireStaff } from "@/lib/session";
+import { requireStaff, requestMeta } from "@/lib/session";
+import { checkNetwork } from "@/server/network";
 import { Nav } from "@/components/Nav";
 import { Flash } from "@/components/Flash";
 import { Yard } from "@/components/Yard";
@@ -42,8 +43,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ o
   const price = eggPrice(pets.length, rules);
   const mood: "ok" | "hungry" | "critical" =
     me.missStreak >= rules.deathStreak - 1 || monthMisses >= rules.deathMonthly - 1 ? "critical" : me.missStreak >= 1 ? "hungry" : "ok";
-  const canFeed = slots.some((s) => s.feedStatus === "PENDING" && inWindow(v.minutes, s.shift.feedStart, s.shift.feedEnd));
-  const canClose = slots.some((s) => s.closeStatus === "PENDING" && inWindow(v.minutes, s.shift.closeStart, s.shift.closeEnd));
+  const net = await checkNetwork(user, (await requestMeta()).ip);
+  const offNet = net.policy.mode !== "off" && !net.network && !net.exempt;
+  const canFeed = net.allowed && slots.some((s) => s.feedStatus === "PENDING" && inWindow(v.minutes, s.shift.feedStart, s.shift.feedEnd));
+  const canClose = net.allowed && slots.some((s) => s.closeStatus === "PENDING" && inWindow(v.minutes, s.shift.closeStart, s.shift.closeEnd));
   const stealOpen = v.minutes >= rules.stealWindowStart && v.minutes < rules.stealWindowEnd;
 
   return (
@@ -55,6 +58,12 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ o
           <div className="muted">{fmtDay(v.day)} · {fmtMin(v.minutes)} · {user.role === "FULLTIME" ? "Full-time" : "Part-time"}</div>
         </div>
         <Flash ok={sp.ok} err={sp.err} />
+        {offNet && (
+          <div className="flash err">
+            📶 Bạn đang không dùng Wi-Fi công ty{net.ip ? ` (mạng ${net.ip})` : ""}.{" "}
+            {net.policy.mode === "enforce" ? "Nút Cho ăn và Đóng cửa bị khoá cho tới khi bạn kết nối Wi-Fi công ty." : "Lượt chấm công lúc này sẽ được ghi lại để admin kiểm tra."}
+          </div>
+        )}
 
         {mood !== "ok" && (
           <div className={`flash ${mood === "critical" ? "err" : ""}`} style={mood === "hungry" ? { background: "var(--warn-bg)", color: "var(--warn)" } : undefined}>

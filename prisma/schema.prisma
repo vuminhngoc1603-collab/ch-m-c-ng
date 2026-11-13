@@ -111,6 +111,7 @@ model User {
   approvedById  String?
   missStreak    Int        @default(0) // số lần bỏ bữa liên tiếp hiện tại
   regrantOn     String? // ngày (YYYY-MM-DD) sẽ được cấp lại con mới
+  networkExempt Boolean   @default(false) // được chấm công ngoài Wi-Fi công ty (làm từ xa, công tác)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 
@@ -360,6 +361,17 @@ model Penalty {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, period])
+}
+
+// ---------- Khoá Wi-Fi công ty ----------
+
+// Mạng được phép chấm công: mỗi Wi-Fi/đường mạng của công ty đi ra Internet bằng 1 IP công cộng (hoặc 1 dải IP).
+model AllowedNetwork {
+  id          String   @id @default(cuid())
+  name        String // vd "Wi-Fi tầng 3"
+  cidr        String   @unique // "203.0.113.7" hoặc "203.0.113.0/28" hoặc IPv6
+  createdById String?
+  createdAt   DateTime @default(now())
 }
 
 // ---------- Rules engine & logs ----------

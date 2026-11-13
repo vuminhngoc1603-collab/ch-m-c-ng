@@ -20,6 +20,10 @@ export async function requireUser() {
 export async function requireStaff() {
   const u = await requireUser();
   if (u.role === "ADMIN") redirect("/admin");
+  // Khoá cả đăng nhập theo Wi-Fi công ty (nếu admin chọn phạm vi "login").
+  const { checkNetwork } = await import("@/server/network");
+  const c = await checkNetwork(u, (await requestMeta()).ip);
+  if (c.policy.scope === "login" && !c.allowed) redirect("/wifi");
   return u;
 }
 
@@ -32,7 +36,8 @@ export async function requireAdmin() {
 export async function requestMeta() {
   const h = await headers();
   return {
-    ip: (h.get("x-forwarded-for") ?? "").split(",")[0].trim() || h.get("x-real-ip") || null,
+    // Vercel tự ghi đè 2 header này bằng IP thật của người dùng, client không giả được.
+    ip: h.get("x-real-ip")?.trim() || (h.get("x-forwarded-for") ?? "").split(",")[0].trim() || null,
     ua: h.get("user-agent"),
   };
 }

@@ -3,14 +3,16 @@ import { getRules } from "@/server/settings";
 import { fmtMin } from "@/lib/time";
 import { fmtVnd } from "@/lib/rules";
 import { HelpButton } from "./HelpButton";
+import { getNetworkPolicy } from "@/server/network";
 
 const WEEKDAY = ["Chủ nhật", "thứ Hai", "thứ Ba", "thứ Tư", "thứ Năm", "thứ Sáu", "thứ Bảy"];
 
 /** Bảng hướng dẫn: số liệu lấy từ cấu hình hiện tại, admin đổi luật thì hướng dẫn tự đổi theo. */
 export async function Help({ autoOpenKey }: { autoOpenKey?: string }) {
-  const [rules, shifts] = await Promise.all([
+  const [rules, shifts, net] = await Promise.all([
     getRules(),
     prisma.shift.findMany({ where: { active: true }, orderBy: [{ kind: "asc" }, { sortOrder: "asc" }] }),
+    getNetworkPolicy(),
   ]);
   const ft = shifts.filter((s) => s.kind === "FULLTIME");
   const pt = shifts.filter((s) => s.kind === "PARTTIME");
@@ -91,6 +93,7 @@ export async function Help({ autoOpenKey }: { autoOpenKey?: string }) {
 
       <h3>Lưu ý quan trọng</h3>
       <ul className="help-tips">
+        {net.mode !== "off" && <li>📶 Chấm công phải dùng <b>Wi-Fi công ty</b>. Dùng 4G hay Wi-Fi ở nhà {net.mode === "enforce" ? "sẽ không bấm được" : "sẽ bị ghi lại để admin kiểm tra"}{net.scope === "login" && net.mode === "enforce" ? ", và ngoài Wi-Fi công ty không vào được web" : ""}.</li>}
         <li>⏰ Đặt nhắc giờ trên điện thoại cho các khung cho ăn và đóng cửa.</li>
         <li>🚪 Tan làm nhớ bấm <b>Đóng cửa</b>, nếu không sẽ bị trộm xu.</li>
         <li>📅 Part-time: lỡ ngày đăng ký ca thì tuần sau không có ca nào.</li>

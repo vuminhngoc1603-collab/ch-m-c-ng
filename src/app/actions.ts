@@ -15,6 +15,9 @@ import {
   requestLeave, reviewLeave, addHoliday, removeHoliday,
 } from "@/server/admin";
 import { runTick } from "@/server/tick";
+import { guardCheckIn, saveNetworkPolicy, type NetworkMode, type NetworkScope } from "@/server/network";
+import { normalizeCidr } from "@/lib/ip";
+import { logActivity } from "@/server/log";
 import { settleMonth } from "@/server/settlement";
 import { saveRules } from "@/server/settings";
 import { mergeRules } from "@/lib/rules";
@@ -67,6 +70,7 @@ export async function feedAction() {
   const u = await requireStaff();
   const meta = await requestMeta();
   await run("/", async () => {
+    await guardCheckIn(u, meta.ip, "feed");
     const r = await feed(u.id, new Date(), meta);
     return `Đã cho ăn ${r.slot.shift.name}: +${fmtCoins(r.cents)} xu.`;
   });
@@ -76,6 +80,7 @@ export async function closeAction() {
   const u = await requireStaff();
   const meta = await requestMeta();
   await run("/", async () => {
+    await guardCheckIn(u, meta.ip, "close");
     await closeYard(u.id, new Date(), meta);
     return "Đã đóng cửa sân. Ví xu của bạn an toàn.";
   });
@@ -263,5 +268,55 @@ export async function settleAction(form: FormData) {
     if (!/^\d{4}-\d{2}$/.test(period) || period >= vn(new Date()).period) throw new AppError("Chỉ chốt được tháng đã kết thúc.");
     const n = await settleMonth(period);
     return `Đã chốt tháng ${period} cho ${n} người.`;
+  });
+}
+
+// ---------- Khoá Wi-Fi công ty ----------
+
+export async function saveNetworkPolicyAction(form: FormData) {
+  const a = await requireAdmin();
+  await run("/admin/network", async () => {
+    const mode = str(form, "mode") as NetworkMode;
+    const scope = str(form, "scope") as NetworkScope;
+    if (!["off", "warn", "enforce"].includes(mode) || !["actions", "login"].includes(scope)) throw new AppError("Lựa chọn không hợp lệ.");
+    if (mode === "enforce" && (await prisma.allowedNetwork.count()) === 0) throw new AppError("Cần thêm ít nhất 1 Wi-Fi trước khi bật chặn.");
+    await saveNetworkPolicy({ mode, scope });
+    await logActivity(a.id, "admin.network.policy", { mode, scope });
+    return mode === "off" ? "Đã tắt khoá Wi-Fi." : mode === "warn" ? "Đã bật chế độ chỉ cảnh báo." : "Đã bật chặn ngoài Wi-Fi công ty.";
+  });
+}
+
+export async function addNetworkAction(form: FormData) {
+  const a = await requireAdmin();
+  const meta = await requestMeta();
+  await run("/admin/network", async () => {
+    const name = str(form, "name").trim();
+    if (!name) throw new AppError("Đặt tên cho Wi-Fi (vd: Wi-Fi tầng 3).");
+    const raw = form.get("useCurrent") ? meta.ip ?? "" : str(form, "cidr");
+    const cidr = normalizeCidr(raw);
+    if (!cidr) throw new AppError(form.get("useCurrent") ? "Không đọc được IP hiện tại của bạn." : "IP không hợp lệ. Ví dụ: 203.0.113.7 hoặc 203.0.113.0/28.");
+    if (await prisma.allowedNetwork.findUnique({ where: { cidr } })) throw new AppError(`IP ${cidr} đã có trong danh sách.`);
+    await prisma.allowedNetwork.create({ data: { name, cidr, createdById: a.id } });
+    await logActivity(a.id, "admin.network.add", { name, cidr });
+    return `Đã thêm ${name} (${cidr}).`;
+  });
+}
+
+export async function removeNetworkAction(form: FormData) {
+  const a = await requireAdmin();
+  await run("/admin/network", async () => {
+    const n = await prisma.allowedNetwork.delete({ where: { id: str(form, "id") } });
+    await logActivity(a.id, "admin.network.remove", { name: n.name, cidr: n.cidr });
+    return `Đã xoá ${n.name}.`;
+  });
+}
+
+export async function setNetworkExemptAction(form: FormData) {
+  const a = await requireAdmin();
+  await run("/admin/network", async () => {
+    const exempt = str(form, "exempt") === "1";
+    const u = await prisma.user.update({ where: { id: str(form, "userId") }, data: { networkExempt: exempt } });
+    await logActivity(a.id, "admin.network.exempt", { userId: u.id, exempt });
+    return exempt ? `${u.name ?? u.email} được chấm công ngoài Wi-Fi công ty.` : `${u.name ?? u.email} phải chấm công ở Wi-Fi công ty.`;
   });
 }
