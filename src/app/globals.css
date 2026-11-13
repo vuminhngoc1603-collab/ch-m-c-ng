@@ -120,21 +120,39 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .garden { position: relative; width: 100%; margin: 0 auto; background-size: cover; background-position: center; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); container-type: inline-size; }
 .garden-empty { position: absolute; inset: auto 0 8% 0; text-align: center; color: #fff; text-shadow: 0 1px 4px #0008; font-weight: 600; }
 .critter { position: absolute; transform: translate(-50%, -100%); transition-property: left, top, width; transition-timing-function: linear; background: none; border: 0; padding: 0; cursor: pointer; }
-.critter img { display: block; width: 100%; height: auto; pointer-events: none; user-select: none; filter: drop-shadow(0 2px 3px #0004); }
 .critter-body { display: block; transition: transform .2s; }
-.critter-body img { animation: breathe 3s ease-in-out infinite; transform-origin: 50% 100%; }
-.critter.walking .critter-body img { animation: hop .42s ease-in-out infinite; }
+.rig { display: block; position: relative; transform-origin: 50% 100%; animation: breathe 2.6s ease-in-out infinite; }
+.rig img { display: block; width: 100%; height: auto; pointer-events: none; user-select: none; filter: drop-shadow(0 2px 3px #0004); }
+.part-body { clip-path: inset(calc(var(--neck) - 4%) 0 0 0); }
+.part-head { position: absolute; inset: 0; clip-path: inset(0 0 calc(92% - var(--neck)) 0); transform-origin: 50% var(--neck); transform: scale(1.16); animation: head-idle 3.2s ease-in-out infinite; }
+.critter.walking .rig { animation: hop .46s ease-in-out infinite; }
+.critter.walking .part-head { animation: head-walk .46s ease-in-out infinite; }
+.critter.happy .rig { animation: jump .65s cubic-bezier(.3,.7,.4,1) 2; }
+.critter.happy .part-head { animation: head-happy .65s ease-in-out 2; }
+.critter.sleeping .rig { animation: breathe 4s ease-in-out infinite; }
+.critter.sleeping .part-head { animation: head-sleep 4s ease-in-out infinite; }
 .critter-shadow { position: absolute; left: 15%; right: 15%; bottom: -3%; height: 9%; border-radius: 50%; background: radial-gradient(#0005, transparent 70%); }
-.critter.mood-hungry img { filter: drop-shadow(0 2px 3px #0004) saturate(.6); }
-.critter.mood-critical img { filter: drop-shadow(0 2px 3px #0004) grayscale(.7) brightness(.9); }
-.critter.mood-critical.walking .critter-body img { animation-duration: .8s; }
-.bubble { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #fff; color: #2b2118; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; box-shadow: 0 2px 6px #0003; animation: pop .25s ease-out; }
-@keyframes hop { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-9%) rotate(2deg); } }
-@keyframes breathe { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(.97); } }
+.critter.mood-hungry .rig img { filter: drop-shadow(0 2px 3px #0004) saturate(.6); }
+.critter.mood-critical .rig img { filter: drop-shadow(0 2px 3px #0004) grayscale(.7) brightness(.9); }
+.critter.mood-critical.walking .rig { animation-duration: .8s; }
+.critter.mood-critical .part-head { animation: head-sleep 3s ease-in-out infinite; }
+.bubble { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #fff; color: #2b2118; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; box-shadow: 0 2px 6px #0003; animation: pop .25s ease-out; z-index: 2; }
+.hearts, .zzz { position: absolute; left: 60%; top: 0; font-size: clamp(12px, 3cqw, 22px); pointer-events: none; z-index: 2; }
+.hearts { animation: float-up 1.3s ease-out forwards; }
+.zzz { left: 70%; animation: float-z 2.4s ease-in-out infinite; }
+@keyframes head-idle { 0%, 100% { transform: scale(1.16) rotate(-3deg); } 50% { transform: scale(1.16) rotate(3deg) translateY(1%); } }
+@keyframes head-walk { 0%, 100% { transform: scale(1.16) rotate(-4deg) translateY(1.5%); } 50% { transform: scale(1.16) rotate(4deg) translateY(-1%); } }
+@keyframes head-happy { 0%, 100% { transform: scale(1.16) rotate(0); } 30% { transform: scale(1.22) rotate(-8deg); } 70% { transform: scale(1.22) rotate(8deg); } }
+@keyframes head-sleep { 0%, 100% { transform: scale(1.16) rotate(8deg) translateY(4%); } 50% { transform: scale(1.16) rotate(10deg) translateY(6%); } }
+@keyframes jump { 0% { transform: scale(1.08, .9); } 35% { transform: translateY(-28%) scale(.94, 1.08); } 70% { transform: translateY(0) scale(1.1, .88); } 100% { transform: scale(1); } }
+@keyframes float-up { from { transform: translateY(0) scale(.6); opacity: 1; } to { transform: translateY(-120%) scale(1.2); opacity: 0; } }
+@keyframes float-z { 0% { transform: translate(0, 0); opacity: 0; } 30% { opacity: 1; } 100% { transform: translate(40%, -90%); opacity: 0; } }
+@keyframes hop { 0%, 100% { transform: translateY(0) scale(1.06, .93); } 50% { transform: translateY(-12%) scale(.96, 1.05); } }
+@keyframes breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.03, .96); } }
 @keyframes pop { from { transform: translate(-50%, 6px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   .critter { transition: none; }
-  .critter img, .critter.walking .critter-body img { animation: none; }
+  .rig, .part-head, .critter .rig, .critter .part-head { animation: none !important; }
 }
 .pen > span { display: block; width: 100%; }
 .pen .pet-img { width: 62%; height: auto; display: block; margin: 0 auto; }

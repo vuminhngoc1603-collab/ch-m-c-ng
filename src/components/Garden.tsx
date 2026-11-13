@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-export type GardenPet = { id: string; name: string; img: string; slot: number };
+export type GardenPet = { id: string; name: string; img: string; slot: number; neck?: number };
 
 type Scene = {
   key: string;
@@ -41,7 +41,7 @@ function home(slot: number) {
   return { u: -0.75 + col * 0.5, v: 0.2 + row * 0.35 };
 }
 
-type Pos = { u: number; v: number; flip: boolean; walking: boolean; dur: number; bubble?: boolean };
+type Pos = { u: number; v: number; flip: boolean; walking: boolean; dur: number; bubble?: boolean; happy?: boolean; sleep?: boolean };
 
 export function Garden({ pets, mood }: { pets: GardenPet[]; mood: "ok" | "hungry" | "critical" }) {
   const [sceneKey, setSceneKey] = useState("sky");
@@ -87,8 +87,13 @@ export function Garden({ pets, mood }: { pets: GardenPet[]; mood: "ok" | "hungry
       setPos((old) => (old[p.id] ? { ...old, [p.id]: { ...old[p.id], u, v, flip: b.x < a.x, walking: true, dur } } : old));
       clearTimeout(timers.current[p.id]);
       timers.current[p.id] = setTimeout(() => {
-        setPos((o) => (o[p.id] ? { ...o, [p.id]: { ...o[p.id], walking: false } } : o));
-        timers.current[p.id] = setTimeout(() => step(p), rand(1500, 5000) / speed);
+        // Thỉnh thoảng ngủ gật một lúc rồi mới đi tiếp.
+        const sleep = Math.random() < (mood === "ok" ? 0.15 : 0.35);
+        setPos((o) => (o[p.id] ? { ...o, [p.id]: { ...o[p.id], walking: false, sleep } } : o));
+        timers.current[p.id] = setTimeout(() => {
+          setPos((o) => (o[p.id] ? { ...o, [p.id]: { ...o[p.id], sleep: false } } : o));
+          step(p);
+        }, (sleep ? rand(6000, 12000) : rand(1500, 5000)) / speed);
       }, dur);
     }
 
@@ -110,8 +115,9 @@ export function Garden({ pets, mood }: { pets: GardenPet[]; mood: "ok" | "hungry
   }
 
   function poke(id: string) {
-    setPos((o) => (o[id] ? { ...o, [id]: { ...o[id], bubble: true } } : o));
-    setTimeout(() => setPos((o) => (o[id] ? { ...o, [id]: { ...o[id], bubble: false } } : o)), 1600);
+    setPos((o) => (o[id] ? { ...o, [id]: { ...o[id], bubble: true, happy: true, sleep: false } } : o));
+    setTimeout(() => setPos((o) => (o[id] ? { ...o, [id]: { ...o[id], happy: false } } : o)), 1300);
+    setTimeout(() => setPos((o) => (o[id] ? { ...o, [id]: { ...o[id], bubble: false } } : o)), 1800);
   }
 
   return (
@@ -132,7 +138,7 @@ export function Garden({ pets, mood }: { pets: GardenPet[]; mood: "ok" | "hungry
             <button
               key={p.id}
               type="button"
-              className={`critter ${st.walking ? "walking" : ""} ${mood !== "ok" ? `mood-${mood}` : ""}`}
+              className={`critter ${st.walking ? "walking" : ""} ${st.happy ? "happy" : ""} ${st.sleep && !st.walking ? "sleeping" : ""} ${mood !== "ok" ? `mood-${mood}` : ""}`}
               onClick={() => poke(p.id)}
               title={p.name}
               style={{
@@ -144,10 +150,17 @@ export function Garden({ pets, mood }: { pets: GardenPet[]; mood: "ok" | "hungry
               }}
             >
               {st.bubble && <span className="bubble">{p.name}</span>}
+              {st.happy && <span className="hearts" aria-hidden>💕</span>}
+              {st.sleep && !st.walking && <span className="zzz" aria-hidden>💤</span>}
               <span className="critter-shadow" />
-              <span className="critter-body" style={{ transform: st.flip ? "scaleX(-1)" : undefined }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.img} alt={p.name} draggable={false} />
+              {/* Kiểu chibi: tách ảnh thành 2 lớp (thân / đầu), phóng to đầu và cho đầu, thân cử động lệch nhịp nhau. */}
+              <span className="critter-body" style={{ transform: st.flip ? "scaleX(-1)" : undefined, ["--neck" as string]: `${(p.neck ?? 0.55) * 100}%` }}>
+                <span className="rig">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img className="part-body" src={p.img} alt="" draggable={false} />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img className="part-head" src={p.img} alt={p.name} draggable={false} />
+                </span>
               </span>
             </button>
           );

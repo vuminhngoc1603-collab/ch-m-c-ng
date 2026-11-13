@@ -10,7 +10,7 @@ import { stealableYards } from "@/server/theft";
 import { getRules } from "@/server/settings";
 import { eggPrice, feedCents, fmtCoins, inWindow } from "@/lib/rules";
 import { fmtDay, fmtMin, fmtDateTime, vn } from "@/lib/time";
-import { ZODIAC, zodiacImage } from "@/lib/zodiac";
+import { ZODIAC, ZODIAC_NECK, zodiacImage } from "@/lib/zodiac";
 import { Garden } from "@/components/Garden";
 import { feedAction, closeAction, stealAction, buyEggAction } from "@/app/actions";
 
@@ -77,7 +77,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ o
 
         <section className="card">
           <div className="row space"><h2>Khu vườn của tôi</h2><span className="muted small">Bấm vào con giáp để xem tên</span></div>
-          <Garden mood={mood} pets={pets.map((p) => ({ id: p.id, slot: p.slot, img: zodiacImage(p.zodiac), name: ZODIAC[p.zodiac].name }))} />
+          <Garden mood={mood} pets={pets.map((p) => ({ id: p.id, slot: p.slot, img: zodiacImage(p.zodiac), name: ZODIAC[p.zodiac].name, neck: ZODIAC_NECK[p.zodiac] }))} />
         </section>
 
         <div className="grid cols-2">

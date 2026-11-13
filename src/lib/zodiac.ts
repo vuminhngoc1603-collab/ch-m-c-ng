@@ -22,3 +22,9 @@ export const ALL_ZODIAC = Object.keys(ZODIAC) as Zodiac[];
 export function zodiacImage(z: Zodiac): string {
   return `/zodiac/${z.toLowerCase()}.webp`;
 }
+
+/** Vị trí "cổ" (tỉ lệ từ trên xuống) để tách đầu khi làm hiệu ứng chibi. */
+export const ZODIAC_NECK: Record<Zodiac, number> = {
+  TY: 0.6, SUU: 0.45, DAN: 0.5, MAO: 0.55, THIN: 0.5, TI: 0.5,
+  NGO: 0.45, MUI: 0.52, THAN: 0.55, DAU: 0.52, TUAT: 0.56, HOI: 0.6,
+};
