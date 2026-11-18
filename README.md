@@ -140,7 +140,7 @@ Mỗi con 1 kỹ năng, chỉ có tác dụng khi con đó còn sống. Con số
 | Dần | Gầm canh cửa | Lần quên đóng cửa đầu tiên mỗi tháng: không ai trộm được |
 | Mão | Chín mạng | 1 lần/quý đỡ chết, **vẫn phạt 300k** |
 | Thìn | Uy rồng | Hệ số +0,25, không vượt x4 |
-| Tỵ | Nọc độc | Người trộm sân bạn mất thêm 1 xu (bị huỷ) và bị khoá 7 ngày không trộm được sân bạn lần nữa (`tiLockDays`) |
+| Tỵ | Nọc độc | Ai đã trộm sân bạn 1 lần thì bị khoá 7 ngày không trộm được sân bạn lần nữa (`tiLockDays`) |
 | Ngọ | Phi nước đại | 10 phút đầu khi sân mở cửa, chỉ người có Ngọ được trộm |
 | Mùi | Hiền lành | Bị trộm 7% thay vì 10% |
 | Thân | Láu lỉnh | 1 lần/tuần được làm người trộm thứ 4 |

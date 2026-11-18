@@ -45,8 +45,6 @@ export type SkillRules = {
   maoPerQuarter: number;
   /** Thìn: cộng thêm vào hệ số (không vượt hệ số tối đa). */
   thinBonus: number;
-  /** Tỵ: người trộm sân bạn mất thêm bao nhiêu xu (bị huỷ). */
-  tiExtraCoins: number;
   /** Tỵ: sau khi trộm sân bạn 1 lần, người đó bị khoá không trộm được sân bạn trong bấy nhiêu ngày (0 = tắt). */
   tiLockDays: number;
   /** Ngọ: số phút đầu sau khi sân mở cửa mà chỉ người có Ngọ được trộm. */
@@ -85,7 +83,6 @@ export const DEFAULT_RULES: Rules = {
     danPerMonth: 1,
     maoPerQuarter: 1,
     thinBonus: 0.25,
-    tiExtraCoins: 1,
     tiLockDays: 7,
     ngoPriorityMinutes: 10,
     muiStealPercent: 7,

@@ -12,7 +12,7 @@ export function skillInfo(z: Zodiac, rules: Rules): SkillInfo {
     case "DAN": return { name: "Gầm canh cửa", kind: "Phòng thủ", text: `${k.danPerMonth} lần quên đóng cửa đầu tiên mỗi tháng: không ai trộm được sân bạn.` };
     case "MAO": return { name: "Chín mạng", kind: "Phòng thủ", text: `${k.maoPerQuarter} lần mỗi quý, khi 1 con sắp chết thì Mão đỡ đòn: không con nào chết. Vẫn bị phạt ${rules.penaltyVnd.toLocaleString("vi-VN")} đ.` };
     case "THIN": return { name: "Uy rồng", kind: "Xu", text: `Hệ số cho ăn +${k.thinBonus.toLocaleString("vi-VN")}, không vượt x${rules.coefTable[rules.maxPets - 1]}.` };
-    case "TI": return { name: "Nọc độc", kind: "Phòng thủ", text: `Ai trộm sân bạn mất thêm ${k.tiExtraCoins} xu (xu này bị huỷ, không về bạn)${k.tiLockDays > 0 ? ` và bị khoá, ${k.tiLockDays} ngày sau mới được trộm sân bạn lần nữa` : ""}.` };
+    case "TI": return { name: "Nọc độc", kind: "Phòng thủ", text: `Ai đã trộm sân bạn 1 lần thì bị khoá, ${k.tiLockDays} ngày sau mới được trộm sân bạn lần nữa.` };
     case "NGO": return { name: "Phi nước đại", kind: "Trộm", text: `${k.ngoPriorityMinutes} phút đầu khi một sân mở cửa, chỉ người có Ngọ được trộm.` };
     case "MUI": return { name: "Hiền lành", kind: "Phòng thủ", text: `Bị trộm chỉ mất ${k.muiStealPercent}% ví thay vì ${rules.stealPercent}%.` };
     case "THAN": return { name: "Láu lỉnh", kind: "Trộm", text: `${k.thanPerWeek} lần mỗi tuần được trộm sân đã đủ ${rules.stealMaxThieves} người trộm.` };

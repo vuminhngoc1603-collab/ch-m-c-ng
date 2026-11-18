@@ -119,18 +119,11 @@ export async function steal(thiefId: string, attendanceId: string, now = new Dat
     }
     if (thiefSkills.has("TY")) await tx.skillUse.create({ data: { userId: thiefId, zodiac: "TY", refKey: `theft:${theft.id}`, period: v.period, note: "Trộm với trần cao hơn" } });
     if (r.victimSkills.has("MUI")) await tx.skillUse.create({ data: { userId: slot.userId, zodiac: "MUI", refKey: `theft:${theft.id}`, period: v.period, note: "Bị trộm ít hơn" } });
-    let venom = 0;
-    if (r.victimSkills.has("TI")) {
-      // Tỵ "Nọc độc": người trộm mất thêm xu (bị huỷ), không để ví người trộm âm.
-      const after = await coinBalance(thiefId, tx);
-      venom = Math.min(rules.skills.tiExtraCoins * 100, Math.max(0, after));
-      if (venom > 0) {
-        await tx.coinLedger.create({ data: { userId: thiefId, amount: -venom, type: "SKILL", period: v.period, refId: theft.id, reason: "Bị Tỵ của chủ sân cắn khi trộm" } });
-        await tx.skillUse.create({ data: { userId: slot.userId, zodiac: "TI", refKey: `theft:${theft.id}`, period: v.period, amount: -venom, note: "Người trộm bị cắn" } });
-        notes.push(`bị Tỵ cắn mất ${venom / 100} xu`);
-      }
+    if (r.victimSkills.has("TI") && rules.skills.tiLockDays > 0) {
+      await tx.skillUse.create({ data: { userId: slot.userId, zodiac: "TI", refKey: `theft:${theft.id}`, period: v.period, note: `Khoá người trộm ${rules.skills.tiLockDays} ngày` } });
+      notes.push(`Tỵ của chủ sân khoá bạn ${rules.skills.tiLockDays} ngày không trộm được sân này nữa`);
     }
-    await logActivity(thiefId, "theft", { theftId: theft.id, victimId: slot.userId, amount, venom, than: r.usesThan }, ip, tx);
-    return { theft, amount, venom, notes };
+    await logActivity(thiefId, "theft", { theftId: theft.id, victimId: slot.userId, amount, than: r.usesThan }, ip, tx);
+    return { theft, amount, notes };
   });
 }

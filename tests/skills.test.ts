@@ -123,15 +123,15 @@ describe("kỹ năng phòng thủ", () => {
     expect((await steal(t.id, s.id, at(MON, "18:05"))).amount).toBe(147); // 7% của 21
   });
 
-  it("Tỵ: người trộm mất thêm 1 xu, ví không bị âm", async () => {
+  it("Tỵ: người trộm không bị trừ thêm xu (bỏ hiệu ứng cũ)", async () => {
     const v = await staff("v@x.com", ["TI"]);
     const t = await staff("t@x.com");
     await coins(v.id, 20);
     const s = await forgetful(v.id);
     const r = await steal(t.id, s.id, at(MON, "18:05"));
     expect(r.amount).toBe(210);
-    expect(r.venom).toBe(100);
-    expect(await coinBalance(t.id)).toBe(110);
+    expect(await coinBalance(t.id)).toBe(210);
+    expect(await prisma.coinLedger.count({ where: { userId: t.id, type: "SKILL" } })).toBe(0);
   });
   it("Tỵ: đã trộm sân có Tỵ thì bị khoá 7 ngày không trộm được sân đó, người khác vẫn trộm được", async () => {
     const v = await staff("v@x.com", ["TI"]);
