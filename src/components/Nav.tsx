@@ -14,6 +14,7 @@ export function Nav({ user }: { user: User }) {
             <>
               <Link href="/admin">Tài khoản & duyệt</Link>
               <Link href="/admin/schedule">Đổi ca hộ</Link>
+              <Link href="/admin/roster">Ca & ngày nghỉ</Link>
               <Link href="/admin/report">Báo cáo tháng</Link>
               <Link href="/admin/network">Wi-Fi</Link>
               <Link href="/admin/settings">Cấu hình</Link>

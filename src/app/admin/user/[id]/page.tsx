@@ -53,7 +53,7 @@ export default async function AdminUserPage({ params, searchParams }: { params: 
           <section className="card"><h2>Sổ xu</h2><div className="table-wrap"><table><tbody>{ledger.map((c) => (
             <tr key={c.id}><td>{fmtDateTime(c.createdAt)}</td><td>{c.type}<div className="muted small">{c.reason}</div></td><td className="num">{fmtCoins(c.amount)}</td></tr>
           ))}</tbody></table></div></section>
-          <section className="card"><h2>Chấm công</h2><div className="table-wrap"><table><tbody>{att.map((a) => (
+          <section className="card"><h2>Chấm công <Link className="small" href={`/admin/roster?user=${u.id}`}>Xem theo tháng →</Link></h2><div className="table-wrap"><table><tbody>{att.map((a) => (
             <tr key={a.id}><td>{fmtDay(a.day)}</td><td>{a.shift.name}</td><td>{a.feedStatus}<div className="muted small">{fmtDateTime(a.feedAt)} {a.feedIp}</div></td><td>{a.closeStatus}<div className="muted small">{fmtDateTime(a.closeAt)}</div></td></tr>
           ))}</tbody></table></div></section>
         </div>

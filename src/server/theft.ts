@@ -27,6 +27,7 @@ async function evaluate(
   thiefId: string,
   thiefSkills: Set<Zodiac>,
   slot: SlotLike,
+  now: Date,
 ): Promise<{ ok: false; why: string } | { ok: true; amount: number; usesThan: boolean; victimSkills: Set<Zodiac> }> {
   const opensAt = Math.max(rules.stealWindowStart, slot.shift.closeEnd ?? 0);
   if (minutes < opensAt) return { ok: false, why: "Chưa tới giờ trộm sân này." };
@@ -46,6 +47,16 @@ async function evaluate(
   }
   if (await guardedByDan(tx, slot)) return { ok: false, why: "Dần đang canh cửa sân này." };
   const victimSkills = await skillsOf(slot.userId, rules, tx);
+  // Tỵ "Nọc độc": ai đã trộm sân này thì bị khoá, vài ngày sau mới được trộm lại sân này.
+  if (victimSkills.has("TI") && rules.skills.tiLockDays > 0) {
+    const since = new Date(now.getTime() - rules.skills.tiLockDays * 86_400_000);
+    const last = await tx.theft.findFirst({ where: { thiefId, victimId: slot.userId, createdAt: { gt: since } }, orderBy: { createdAt: "desc" } });
+    if (last) {
+      const until = vn(new Date(last.createdAt.getTime() + rules.skills.tiLockDays * 86_400_000));
+      const [, m, d] = until.day.split("-");
+      return { ok: false, why: `Tỵ của chủ sân đã cắn bạn: bạn bị khoá trộm sân này tới ${String(Math.floor(until.minutes / 60)).padStart(2, "0")}h${String(until.minutes % 60).padStart(2, "0")} ngày ${d}/${m}.` };
+    }
+  }
   const balance = await coinBalance(slot.userId, tx);
   const amount = stealCents(balance, rules, {
     percent: victimSkills.has("MUI") ? rules.skills.muiStealPercent : undefined,
@@ -67,7 +78,7 @@ export async function stealableYards(thiefId: string, now = new Date()) {
   const thiefSkills = await skillsOf(thiefId, rules);
   const out = [];
   for (const s of slots) {
-    const r = await evaluate(prisma, rules, v.minutes, v.day, thiefId, thiefSkills, s);
+    const r = await evaluate(prisma, rules, v.minutes, v.day, thiefId, thiefSkills, s, now);
     if (!r.ok) continue;
     out.push({ attendanceId: s.id, victim: s.user, shiftName: s.shift.name, thieves: s.thefts.length, amount: r.amount, viaThan: r.usesThan });
   }
@@ -91,7 +102,7 @@ export async function steal(thiefId: string, attendanceId: string, now = new Dat
     // Khoá ví hai bên theo thứ tự id để tránh deadlock khi 2 người trộm lẫn nhau.
     for (const id of [slot.userId, thiefId].sort()) await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${id} FOR UPDATE`;
     const thiefSkills = await skillsOf(thiefId, rules, tx);
-    const r = await evaluate(tx, rules, v.minutes, v.day, thiefId, thiefSkills, slot);
+    const r = await evaluate(tx, rules, v.minutes, v.day, thiefId, thiefSkills, slot, now);
     if (!r.ok) throw new AppError(r.why);
     const amount = r.amount;
     const theft = await tx.theft.create({ data: { attendanceId, victimId: slot.userId, thiefId, amount, createdAt: now } });
