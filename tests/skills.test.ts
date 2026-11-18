@@ -133,6 +133,22 @@ describe("kỹ năng phòng thủ", () => {
     expect(r.venom).toBe(100);
     expect(await coinBalance(t.id)).toBe(110);
   });
+  it("Tỵ: đã trộm sân có Tỵ thì bị khoá 7 ngày không trộm được sân đó, người khác vẫn trộm được", async () => {
+    const v = await staff("v@x.com", ["TI"]);
+    const t = await staff("t@x.com");
+    const o = await staff("o@x.com");
+    await coins(v.id, 20);
+    await coins(t.id, 5);
+    const s1 = await forgetful(v.id, MON);
+    await steal(t.id, s1.id, at(MON, "18:05"));
+    const s2 = await forgetful(v.id, TUE);
+    expect(await stealableYards(t.id, at(TUE, "18:05"))).toHaveLength(0);
+    await expect(steal(t.id, s2.id, at(TUE, "18:05"))).rejects.toThrow(/Tỵ.*khoá trộm sân này tới 18h05 ngày 23\/11/);
+    expect(await stealableYards(o.id, at(TUE, "18:05"))).toHaveLength(1);
+    // Hết 7 ngày thì được trộm lại.
+    await prisma.theft.updateMany({ where: { thiefId: t.id }, data: { createdAt: at("2026-11-09", "18:05") } });
+    expect(await stealableYards(t.id, at(TUE, "18:05"))).toHaveLength(1);
+  });
 });
 
 describe("kỹ năng trộm", () => {
