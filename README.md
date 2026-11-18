@@ -20,7 +20,8 @@ Quên đóng cửa thì đồng nghiệp được trộm xu, bỏ bữa thì con
 | Cuối tháng | Biến động = cho ăn + trộm được − bị trộm (+ điều chỉnh admin). Admin xem/tải CSV để tính thưởng. Quy đổi 1 xu = 1 điểm (tháng âm = 0), điểm dồn sang tháng sau. |
 | Trứng | Mua bằng điểm: con thứ n giá 20 × (n − 1). Nở ngẫu nhiên, không trùng con đang có. |
 | Nghỉ | Lễ chung (admin tạo) + đơn nghỉ phép/nghỉ lễ cá nhân (admin duyệt): không cho ăn, không tính xu, không tính bỏ bữa. |
-| Admin | Duyệt/khoá tài khoản, đổi vai trò, duyệt nghỉ, đổi ca hộ, sửa giờ ca, sửa luật (Rules Engine JSON), điều chỉnh xu/điểm có lý do, báo cáo tháng + CSV, chạy quét thủ công. |
+| Admin | Duyệt/khoá tài khoản, đổi vai trò, duyệt nghỉ, đổi ca hộ, sửa giờ ca, sửa luật (Rules Engine JSON), điều chỉnh xu/điểm có lý do, báo cáo tháng + CSV, báo cáo ca làm & ngày nghỉ, chạy quét thủ công. |
+| Ca làm & ngày nghỉ | Admin → "Ca & ngày nghỉ": bảng tháng, mỗi người một dòng, mỗi ngày một ô (đi làm / thiếu bữa / vắng / nghỉ phép / lễ / đã xếp lịch), part-time ghi mã ca dưới ô. Chọn 1 người để xem chi tiết từng ngày: ca hoặc nhịp, khung giờ, giờ cho ăn, giờ đóng cửa, ca admin đổi hộ, đơn nghỉ chờ duyệt. Tải CSV một dòng mỗi người/ngày/ca. |
 
 Mọi mốc giờ tính theo giờ Việt Nam (UTC+7) và lấy giờ máy chủ.
 

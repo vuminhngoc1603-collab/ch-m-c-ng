@@ -53,6 +53,7 @@ h2 { font-size: 1.1rem; margin: 0 0 12px; }
 .muted { color: var(--muted); }
 .small { font-size: 13px; }
 .container { max-width: 1040px; margin: 0 auto; padding: 20px 16px 60px; }
+.container.wide { max-width: 1480px; }
 .topbar { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; }
 .topbar .inner { max-width: 1040px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .brand { font-weight: 700; color: var(--text); }
@@ -234,3 +235,24 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .skill.on img { filter: none; }
 .skill-name { font-weight: 600; margin-bottom: 2px; }
 @media (max-width: 480px) { .skill-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* Báo cáo ca làm & ngày nghỉ */
+.roster { border-collapse: separate; border-spacing: 0; }
+.roster th, .roster td { padding: 6px 4px; }
+.roster th.day, .roster td.day { text-align: center; min-width: 28px; padding-left: 2px; padding-right: 2px; }
+.roster th.day .wd { font-weight: 400; font-size: 11px; }
+.roster th.wkd { color: var(--muted); opacity: .7; }
+.roster th.hol { color: var(--accent); }
+.roster th.today { background: var(--surface-2); border-radius: 6px; }
+.roster .sticky { position: sticky; left: 0; background: var(--surface); z-index: 1; min-width: 130px; padding-right: 10px; }
+.roster .codes { font-size: 10px; color: var(--muted); line-height: 1.1; white-space: nowrap; }
+.rc { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; font-style: normal; font-weight: 700; font-size: 12px; }
+.rc.good { background: var(--good-bg); color: var(--good); }
+.rc.warn { background: var(--warn-bg); color: var(--warn); }
+.rc.bad { background: var(--bad-bg); color: var(--bad); }
+.rc.info { background: var(--surface-2); color: var(--accent); }
+.rc.off { color: var(--muted); }
+.rc.none { border: 1px dashed var(--border); color: var(--muted); }
+.roster-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
+.roster-legend span { display: inline-flex; align-items: center; gap: 6px; }
+tr.dim td { color: var(--muted); }
