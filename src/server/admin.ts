@@ -1,6 +1,8 @@
 import type { LeaveType, Role, UserStatus } from "@prisma/client";
 import { prisma, AppError, lockUser } from "@/lib/db";
-import { vn } from "@/lib/time";
+import { vn, vnInstant } from "@/lib/time";
+import { vnPublicHolidays } from "@/lib/vn-holidays";
+import { syncPublicHolidays } from "./holidays";
 import { getRules } from "./settings";
 import { ensureFirstPet } from "./yard";
 import { logActivity } from "./log";
@@ -69,11 +71,28 @@ export async function reviewLeave(adminId: string, id: string, approve: boolean)
 
 export async function addHoliday(adminId: string, day: string, name: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) throw new AppError("Ngày không hợp lệ.");
-  await prisma.holiday.upsert({ where: { day }, create: { day, name }, update: { name } });
+  // Admin thêm/sửa (kể cả sửa tên ngày lễ tự động) -> MANUAL, và bỏ đánh dấu "đã xoá" nếu có.
+  await prisma.$transaction([
+    prisma.holiday.upsert({ where: { day }, create: { day, name, source: "MANUAL" }, update: { name, source: "MANUAL" } }),
+    prisma.holidaySkip.deleteMany({ where: { day } }),
+  ]);
   await logActivity(adminId, "admin.holiday.add", { day, name });
 }
 
+/** Xoá ngày lễ. Nếu là ngày lễ nhà nước tự động thì ghi nhớ để không tự nạp lại (vd chính phủ hoán đổi ngày nghỉ). */
 export async function removeHoliday(adminId: string, day: string) {
-  await prisma.holiday.delete({ where: { day } });
+  const isPublic = vnPublicHolidays(Number(day.slice(0, 4))).some((h) => h.day === day);
+  await prisma.$transaction(async (tx) => {
+    const h = await tx.holiday.findUnique({ where: { day } });
+    if (h) await tx.holiday.delete({ where: { day } });
+    if (isPublic || h?.source === "AUTO") await tx.holidaySkip.upsert({ where: { day }, create: { day }, update: {} });
+  });
   await logActivity(adminId, "admin.holiday.remove", { day });
+}
+
+/** Khôi phục ngày lễ nhà nước tự động đã bị xoá. */
+export async function restorePublicHoliday(adminId: string, day: string) {
+  await prisma.holidaySkip.deleteMany({ where: { day } });
+  await syncPublicHolidays(vnInstant(day));
+  await logActivity(adminId, "admin.holiday.restore", { day });
 }

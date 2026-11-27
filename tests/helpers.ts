@@ -4,7 +4,7 @@ import { seed } from "../prisma/seed";
 import type { Role } from "@prisma/client";
 
 export async function resetDb() {
-  await prisma.$executeRawUnsafe(`TRUNCATE "User","Holiday","Setting","Shift" RESTART IDENTITY CASCADE`);
+  await prisma.$executeRawUnsafe(`TRUNCATE "User","Holiday","HolidaySkip","Setting","Shift" RESTART IDENTITY CASCADE`);
   await seed(prisma);
 }
 

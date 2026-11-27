@@ -12,9 +12,10 @@ import { buyEgg, movePet } from "@/server/yard";
 import { saveMyRegistrations, adminSetRegistrations } from "@/server/schedule";
 import {
   approveUser, setUserStatus, setUserRole, adjustCoins, adjustPoints,
-  requestLeave, reviewLeave, addHoliday, removeHoliday,
+  requestLeave, reviewLeave, addHoliday, removeHoliday, restorePublicHoliday,
 } from "@/server/admin";
 import { runTick } from "@/server/tick";
+import { syncPublicHolidays } from "@/server/holidays";
 import { guardCheckIn, saveNetworkPolicy, type NetworkMode, type NetworkScope } from "@/server/network";
 import { normalizeCidr } from "@/lib/ip";
 import { logActivity } from "@/server/log";
@@ -220,6 +221,22 @@ export async function removeHolidayAction(form: FormData) {
   });
 }
 
+export async function restoreHolidayAction(form: FormData) {
+  const a = await requireAdmin();
+  await run("/admin/settings", async () => {
+    await restorePublicHoliday(a.id, str(form, "day"));
+    return "Đã khôi phục ngày lễ.";
+  });
+}
+
+export async function syncHolidaysAction() {
+  await requireAdmin();
+  await run("/admin/settings", async () => {
+    const n = await syncPublicHolidays(new Date());
+    return n ? `Đã nạp thêm ${n} ngày lễ theo lịch nhà nước.` : "Lịch lễ nhà nước đã đủ, không có ngày mới.";
+  });
+}
+
 export async function saveShiftAction(form: FormData) {
   await requireAdmin();
   await run("/admin/settings", async () => {
@@ -268,6 +285,7 @@ export async function setCoefLockAction(form: FormData) {
 export async function runTickAction() {
   await requireAdmin();
   await run("/admin", async () => {
+    await syncPublicHolidays(new Date());
     const s = await runTick(new Date());
     return `Đã quét: ${s.missed} bỏ bữa, ${s.deaths} con chết, ${s.forgot} quên đóng cửa, ${s.regranted} cấp lại.`;
   });

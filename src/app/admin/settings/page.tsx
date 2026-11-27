@@ -3,18 +3,23 @@ import { requireAdmin } from "@/lib/session";
 import { Nav } from "@/components/Nav";
 import { Flash } from "@/components/Flash";
 import { getRules } from "@/server/settings";
-import { fmtDay, fmtMin } from "@/lib/time";
-import { saveShiftAction, saveRulesAction, setCoefLockAction, addHolidayAction, removeHolidayAction } from "@/app/actions";
+import { saveShiftAction, saveRulesAction, setCoefLockAction, addHolidayAction, removeHolidayAction, restoreHolidayAction, syncHolidaysAction } from "@/app/actions";
+import { skippedPublicHolidays } from "@/server/holidays";
+import { fmtDay, fmtMin, vn } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ ok?: string; err?: string }> }) {
   const admin = await requireAdmin();
   const sp = await searchParams;
-  const [shifts, rules, holidays] = await Promise.all([
+  const today = vn(new Date()).day;
+  const year = Number(today.slice(0, 4));
+  const [shifts, rules, holidays, skipped] = await Promise.all([
     prisma.shift.findMany({ orderBy: [{ sortOrder: "asc" }] }),
     getRules(),
-    prisma.holiday.findMany({ orderBy: { day: "desc" }, take: 30 }),
+    // Năm nay + năm sau (lịch nhà nước tự nạp sẵn), cộng ngày admin thêm.
+    prisma.holiday.findMany({ where: { day: { gte: `${year}-01-01`, lte: `${year + 1}-12-31` } }, orderBy: { day: "asc" } }),
+    Promise.all([skippedPublicHolidays(year), skippedPublicHolidays(year + 1)]).then((l) => l.flat()),
   ]);
   return (
     <>
@@ -49,15 +54,31 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         <div className="grid cols-2">
           <section className="card">
             <h2>Ngày nghỉ lễ chung</h2>
+            <p className="muted small">
+              Lịch nghỉ lễ nhà nước (Tết Dương lịch, Tết Nguyên đán, Giỗ Tổ 10/3 âm lịch, 30/4, 1/5, Quốc khánh 2/9 + 1 ngày liền kề, Ngày Văn hoá 24/11,
+              và nghỉ bù khi lễ trùng T7/CN) được <b>tự nạp sẵn</b> cho năm {year} và {year + 1}, không cần nhập. Ngày lễ không phải cho ăn, không tính bỏ bữa.
+              Khi chính phủ công bố hoán đổi/nghỉ bù khác: thêm ngày mới ở dưới, xoá ngày không nghỉ (ngày lễ tự động đã xoá sẽ không bị nạp lại).
+            </p>
             <form action={addHolidayAction} className="row">
               <input type="date" name="day" required />
               <input name="name" placeholder="Tên ngày lễ" />
-              <button className="btn primary">Thêm</button>
+              <button className="btn primary">Thêm / sửa tên</button>
             </form>
             <table style={{ marginTop: 10 }}><tbody>{holidays.map((h) => (
-              <tr key={h.day}><td>{fmtDay(h.day)}</td><td>{h.name}</td>
+              <tr key={h.day} style={h.day < today ? { opacity: 0.55 } : undefined}><td>{fmtDay(h.day)}</td><td>{h.name}</td>
+                <td><span className="muted small">{h.source === "AUTO" ? "Tự động" : "Admin"}</span></td>
                 <td><form action={removeHolidayAction}><input type="hidden" name="day" value={h.day} /><button className="btn danger">Xoá</button></form></td></tr>
             ))}</tbody></table>
+            {skipped.length > 0 && (
+              <>
+                <h3 style={{ marginTop: 12 }}>Ngày lễ nhà nước đã xoá</h3>
+                <table><tbody>{skipped.map((h) => (
+                  <tr key={h.day}><td>{fmtDay(h.day)}</td><td>{h.name}</td>
+                    <td><form action={restoreHolidayAction}><input type="hidden" name="day" value={h.day} /><button className="btn">Khôi phục</button></form></td></tr>
+                ))}</tbody></table>
+              </>
+            )}
+            <form action={syncHolidaysAction} style={{ marginTop: 10 }}><button className="btn">Nạp lại lịch lễ nhà nước</button></form>
           </section>
           <section className="card">
             <h2>Luật (Rules Engine)</h2>

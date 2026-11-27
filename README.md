@@ -150,6 +150,17 @@ Mỗi con 1 kỹ năng, chỉ có tác dụng khi con đó còn sống. Con số
 
 Xu từ kỹ năng ghi vào sổ cái loại `SKILL`, **tính vào biến động tháng và thưởng như xu thường** (cột "Kỹ năng" trên báo cáo/CSV). Mỗi lần kích hoạt ghi vào bảng `SkillUse` (unique theo người + con + mã sự kiện nên job quét chạy lại không cộng trùng).
 
+## Nghỉ lễ nhà nước tự động
+
+Lịch nghỉ lễ theo Điều 112 Bộ luật Lao động được **tự tính và nạp sẵn** cho năm nay + năm sau (`src/lib/vn-holidays.ts`, âm lịch tính theo giờ VN trong `src/lib/lunar.ts`), admin không cần nhập:
+
+- Tết Dương lịch 1/1 · Tết Nguyên đán 5 ngày (ngày cuối năm âm lịch + mùng 1–4) · Giỗ Tổ Hùng Vương 10/3 âm lịch · 30/4 · 1/5 · Quốc khánh 2/9 + 1 ngày liền kề · Ngày Văn hoá Việt Nam 24/11 (từ 2026).
+- Ngày lễ trùng T7/CN được **nghỉ bù** vào ngày làm việc kế tiếp.
+- Ngày liền kề 2/9 do Thủ tướng chọn hằng năm; hệ thống tự chọn ngày nối với cuối tuần (2/9 rơi vào CN/T2/T5 thì nghỉ 3/9, còn lại 1/9).
+
+Job cron (`/api/cron`) và nút "Quét ngay" của admin tự nạp lịch mỗi lần chạy (idempotent). Ngày lễ không có lượt cho ăn, không tính bỏ bữa, con Tuất vẫn "trực lễ" như cũ.
+Admin vẫn chỉnh được ở **Cấu hình → Ngày nghỉ lễ chung**: thêm ngày nghỉ bù/hoán đổi chính phủ công bố, sửa tên, xoá ngày không nghỉ. Ngày lễ tự động đã xoá được ghi vào bảng `HolidaySkip` nên không bị nạp lại (có nút Khôi phục). Nghỉ phép cá nhân vẫn do admin duyệt như cũ.
+
 ## Mở rộng sau
 
 Kỹ năng ẩn của 12 con giáp (gồm con tự cho ăn ngày nghỉ lễ) và giao nhiệm vụ: cắm thêm vào Rules Engine (`src/lib/rules.ts`) và dùng chung sổ cái xu.
