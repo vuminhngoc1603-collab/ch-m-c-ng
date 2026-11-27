@@ -40,6 +40,11 @@ async function forgetful(victimId: string, day = MON) {
 }
 
 describe("kỹ năng xu", () => {
+  it("Thìn: hệ số khoá vẫn +0,25", async () => {
+    const a = await staff("a@x.com", ["THIN", "DAU", "TY"]);
+    expect((await feed(a.id, at(MON, "8:40"))).cents).toBe(125);
+  });
+
   it("Thìn: hệ số +0,25 nhưng không vượt x4 (khi admin mở khoá hệ số)", async () => {
     await prisma.setting.upsert({ where: { key: "rules" }, create: { key: "rules", value: { coefLocked: false } }, update: { value: { coefLocked: false } } });
     const a = await staff("a@x.com", ["THIN"]);

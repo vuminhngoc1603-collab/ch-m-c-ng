@@ -3,7 +3,7 @@
 export type Rules = {
   /** Hệ số xu theo số con đang sống: phần tử i là hệ số khi có i+1 con. */
   coefTable: number[];
-  /** Khoá hệ số: true = mỗi lần cho ăn luôn 1 xu (x1), bỏ qua coefTable và kỹ năng Thìn. */
+  /** Khoá hệ số: true = hệ số theo số con luôn x1 (bỏ qua coefTable). Kỹ năng Thìn vẫn cộng thêm vì là kỹ năng riêng. */
   coefLocked: boolean;
   /** Giá trứng cho con thứ n = eggStep × (n − 1) điểm. */
   eggStep: number;
@@ -107,7 +107,7 @@ export function mergeRules(partial: unknown): Rules {
 
 /** Xu (cents, 1 xu = 100) nhận được cho 1 lần cho ăn khi sân có `alive` con. `bonus` = cộng thêm hệ số (kỹ năng Thìn). */
 export function feedCents(alive: number, rules: Rules = DEFAULT_RULES, bonus = 0): number {
-  if (rules.coefLocked) return 100;
+  if (rules.coefLocked) return Math.round((1 + bonus) * 100);
   // Giả định: khi tạm thời chưa có con nào (đang chờ cấp lại), vẫn tính hệ số x1.
   const n = Math.max(1, Math.min(alive, rules.maxPets));
   const top = rules.coefTable[rules.maxPets - 1];

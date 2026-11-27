@@ -13,7 +13,7 @@ Quên đóng cửa thì đồng nghiệp được trộm xu, bỏ bữa thì con
 | Vai trò | Admin (chỉ quản trị) · Full-time · Part-time |
 | Full-time | T2–T6: cho ăn 8h30–9h00 và 13h45–14h00, đóng cửa 17h30–18h00. T7/CN nghỉ. |
 | Part-time | Đăng ký ca tuần sau **chỉ trong ngày thứ Sáu**; hết thứ Sáu khoá, chỉ admin đổi hộ (bắt buộc ghi lý do). Chặn 2 ca chồng giờ. T7/CN tuỳ chọn. |
-| Xu | 1 xu = 2.000 đ. Hệ số đang **khoá x1**: mỗi lần cho ăn = 1 xu bất kể số con (`coefLocked`). Admin bật/tắt ở trang **Cấu hình** (nút Mở hệ số / Khoá hệ số). Mở khoá thì dùng bảng hệ số x1, +0,25 mỗi con, con thứ 12 = x4. Sổ cái chỉ ghi thêm. |
+| Xu | 1 xu = 2.000 đ. Hệ số đang **khoá x1**: mỗi lần cho ăn = 1 xu bất kể số con (`coefLocked`), riêng kỹ năng Thìn vẫn +0,25. Admin bật/tắt ở trang **Cấu hình** (nút Mở hệ số / Khoá hệ số). Mở khoá thì dùng bảng hệ số x1, +0,25 mỗi con, con thứ 12 = x4. Sổ cái chỉ ghi thêm. |
 | Sân | 12 ô, mỗi con giáp có hình cố định, người dùng tự đổi chỗ. Con đầu miễn phí khi được duyệt. |
 | Chết & phạt | Bỏ 3 bữa liên tiếp, hoặc 5 bữa trong tháng. Sau mỗi lần chết cả 2 bộ đếm về 0, phải bỏ đủ 3 liên tiếp / 5 bữa nữa mới chết tiếp. Chết 1 con ngẫu nhiên, phạt 100.000 đ trừ lương (không trừ xu). Mất con cuối thì hôm sau được cấp con mới. |
 | Trộm xu | Quên đóng cửa → 17h30–24h00 cùng ngày, mỗi lần lấy 10% ví (tối đa 5 xu), tối đa 3 người/lần quên. Có khoá dòng để bấm cùng lúc không vượt 3. |
@@ -139,7 +139,7 @@ Mỗi con 1 kỹ năng, chỉ có tác dụng khi con đó còn sống. Con số
 | Sửu | Cần cù | Tuần đi làm không bỏ bữa nào: +1 xu |
 | Dần | Gầm canh cửa | Lần quên đóng cửa đầu tiên mỗi tháng: không ai trộm được |
 | Mão | Chín mạng | 1 lần/quý đỡ chết, **vẫn phạt 100k** |
-| Thìn | Uy rồng | Hệ số +0,25, không vượt x4 (tạm không có tác dụng khi hệ số khoá) |
+| Thìn | Uy rồng | Hệ số +0,25, không vượt x4 (vẫn chạy khi hệ số khoá: x1 + 0,25) |
 | Tỵ | Nọc độc | Ai đã trộm sân bạn 1 lần thì bị khoá 7 ngày không trộm được sân bạn lần nữa (`tiLockDays`) |
 | Ngọ | Phi nước đại | 10 phút đầu khi sân mở cửa, chỉ người có Ngọ được trộm |
 | Mùi | Hiền lành | Bị trộm 7% thay vì 10% |

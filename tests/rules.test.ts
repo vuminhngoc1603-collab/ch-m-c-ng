@@ -3,10 +3,11 @@ import { DEFAULT_RULES, eggPrice, feedCents, pointsFromNet, shiftsOverlap, shoul
 import { addDays, fmtMin, periodBounds, prevPeriod, vn, vnInstant } from "@/lib/time";
 
 describe("hệ số xu", () => {
-  it("mặc định khoá hệ số: luôn 1 xu, kể cả có Thìn", () => {
+  it("mặc định khoá hệ số: luôn 1 xu, Thìn vẫn +0,25", () => {
     expect(DEFAULT_RULES.coefLocked).toBe(true);
     for (const n of [0, 1, 2, 5, 12]) expect(feedCents(n)).toBe(100);
-    expect(feedCents(3, DEFAULT_RULES, 0.25)).toBe(100);
+    expect(feedCents(3, DEFAULT_RULES, 0.25)).toBe(125);
+    expect(feedCents(12, DEFAULT_RULES, 0.25)).toBe(125);
   });
 
   it("mở khoá: 1 con x1, mỗi con thêm +0,25, con thứ 12 x4", () => {

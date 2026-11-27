@@ -73,7 +73,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
               <div><button className="btn primary">Lưu cấu hình</button></div>
             </form>
             <p className="muted small">
-              coefLocked: true = khoá hệ số, mỗi lần cho ăn luôn 1 xu. coefTable: hệ số theo số con (1→12), chỉ dùng khi coefLocked = false. eggStep: giá trứng con thứ n = eggStep×(n−1). stealPercent/stealMaxCoins/stealMaxThieves: luật trộm.
+              coefLocked: true = khoá hệ số theo số con ở x1 (Thìn vẫn +thinBonus). coefTable: hệ số theo số con (1→12), chỉ dùng khi coefLocked = false. eggStep: giá trứng con thứ n = eggStep×(n−1). stealPercent/stealMaxCoins/stealMaxThieves: luật trộm.
               stealWindowStart/End: phút trong ngày (1050 = 17h30). deathStreak/deathMonthly: điều kiện chết (đếm lại từ 0 sau mỗi lần chết). penaltyVnd: phạt mỗi con chết.
             </p>
           </section>

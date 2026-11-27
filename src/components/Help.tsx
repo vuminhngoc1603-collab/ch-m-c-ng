@@ -51,7 +51,7 @@ export async function Help({ autoOpenKey }: { autoOpenKey?: string }) {
       <h3>3. Xu</h3>
       <ul>
         {rules.coefLocked ? (
-          <li>Mỗi lần cho ăn đúng giờ được <b>1 xu</b>, nuôi bao nhiêu con cũng vậy (hệ số đang khoá x1). 1 xu = {fmtVnd(rules.coinVnd)}.</li>
+          <li>Mỗi lần cho ăn đúng giờ được <b>1 xu</b>, nuôi bao nhiêu con cũng vậy (hệ số đang khoá x1; riêng kỹ năng Thìn vẫn +{rules.skills.thinBonus.toLocaleString("vi-VN")}). 1 xu = {fmtVnd(rules.coinVnd)}.</li>
         ) : (
           <>
             <li>Mỗi lần cho ăn đúng giờ được <b>1 xu × hệ số</b>. 1 xu = {fmtVnd(rules.coinVnd)}.</li>

@@ -56,7 +56,7 @@ export async function RulesPanel({ role }: { role: Role }) {
         <summary>Xu và hệ số</summary>
         <ul className="small">
           {rules.coefLocked ? (
-            <li>1 lần cho ăn = 1 xu, nuôi bao nhiêu con cũng vậy (hệ số đang khoá x1). 1 xu = {fmtVnd(rules.coinVnd)}.</li>
+            <li>1 lần cho ăn = 1 xu, nuôi bao nhiêu con cũng vậy (hệ số đang khoá x1; riêng kỹ năng Thìn vẫn +{rules.skills.thinBonus.toLocaleString("vi-VN")}). 1 xu = {fmtVnd(rules.coinVnd)}.</li>
           ) : (
             <>
               <li>1 lần cho ăn = 1 xu × hệ số. 1 xu = {fmtVnd(rules.coinVnd)}.</li>
