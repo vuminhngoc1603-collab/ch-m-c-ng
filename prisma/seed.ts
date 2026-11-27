@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { DEFAULT_RULES } from "../src/lib/rules";
+import { vnPublicHolidays } from "../src/lib/vn-holidays";
 
 const prisma = new PrismaClient();
 const h = (hh: number, mm = 0) => hh * 60 + mm;
@@ -22,8 +23,19 @@ export async function seed(client = prisma) {
   await client.setting.upsert({ where: { key: "rules" }, create: { key: "rules", value: DEFAULT_RULES }, update: {} });
 }
 
+/** Nạp sẵn lịch nghỉ lễ nhà nước năm nay + năm sau (cron cũng tự nạp mỗi lần chạy). */
+async function seedPublicHolidays(client = prisma) {
+  const y = new Date().getUTCFullYear();
+  const skipped = new Set((await client.holidaySkip.findMany()).map((s) => s.day));
+  const data = [...vnPublicHolidays(y), ...vnPublicHolidays(y + 1)]
+    .filter((h) => !skipped.has(h.day))
+    .map((h) => ({ day: h.day, name: h.name, source: "AUTO" }));
+  await client.holiday.createMany({ data, skipDuplicates: true });
+}
+
 if (require.main === module) {
   seed()
-    .then(() => console.log("Seed xong: danh mục ca + cấu hình luật mặc định."))
+    .then(() => seedPublicHolidays())
+    .then(() => console.log("Seed xong: danh mục ca + cấu hình luật mặc định + lịch nghỉ lễ nhà nước."))
     .finally(() => prisma.$disconnect());
 }

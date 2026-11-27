@@ -207,10 +207,17 @@ model ShiftRegistration {
   @@index([day])
 }
 
-// Ngày nghỉ lễ chung cho toàn công ty (admin tạo).
+// Ngày nghỉ lễ chung cho toàn công ty: tự nạp theo lịch nhà nước (AUTO) hoặc admin thêm (MANUAL).
 model Holiday {
   day       String   @id // YYYY-MM-DD
   name      String
+  source    String   @default("MANUAL") // AUTO = tự nạp lịch lễ nhà nước, MANUAL = admin thêm/sửa
+  createdAt DateTime @default(now())
+}
+
+// Ngày lễ tự động mà admin đã xoá (vd chính phủ hoán đổi ngày nghỉ): không tự nạp lại nữa.
+model HolidaySkip {
+  day       String   @id // YYYY-MM-DD
   createdAt DateTime @default(now())
 }
 

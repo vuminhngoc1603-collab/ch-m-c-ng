@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runTick } from "@/server/tick";
+import { syncPublicHolidays } from "@/server/holidays";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,8 @@ export async function GET(req: Request) {
   if (!secret || (auth !== `Bearer ${secret}` && q !== secret)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
+  // Lịch nghỉ lễ nhà nước năm nay + năm sau luôn có sẵn trước khi quét lượt cho ăn.
+  const holidays = await syncPublicHolidays(new Date());
   const stats = await runTick(new Date());
-  return NextResponse.json({ ok: true, stats });
+  return NextResponse.json({ ok: true, stats, holidays });
 }
