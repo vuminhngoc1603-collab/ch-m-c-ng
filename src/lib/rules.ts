@@ -3,6 +3,8 @@
 export type Rules = {
   /** Hệ số xu theo số con đang sống: phần tử i là hệ số khi có i+1 con. */
   coefTable: number[];
+  /** Khoá hệ số: true = mỗi lần cho ăn luôn 1 xu (x1), bỏ qua coefTable và kỹ năng Thìn. */
+  coefLocked: boolean;
   /** Giá trứng cho con thứ n = eggStep × (n − 1) điểm. */
   eggStep: number;
   /** Mỗi lần trộm lấy stealPercent % số dư ví chủ sân... */
@@ -18,7 +20,7 @@ export type Rules = {
   penaltyVnd: number;
   /** Bỏ bữa liên tiếp bao nhiêu lần thì chết. */
   deathStreak: number;
-  /** Bỏ bữa bao nhiêu lần trong tháng thì chết (và mỗi lần tiếp theo chết thêm). */
+  /** Bỏ bữa bao nhiêu lần trong tháng thì chết. Sau mỗi lần chết đếm lại từ 0. */
   deathMonthly: number;
   /** Tỷ giá tham chiếu 1 xu = coinVnd đồng. */
   coinVnd: number;
@@ -63,13 +65,14 @@ export type SkillRules = {
 
 export const DEFAULT_RULES: Rules = {
   coefTable: [1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 4],
+  coefLocked: true,
   eggStep: 20,
   stealPercent: 10,
   stealMaxCoins: 5,
   stealMaxThieves: 3,
   stealWindowStart: 17 * 60 + 30,
   stealWindowEnd: 24 * 60,
-  penaltyVnd: 300_000,
+  penaltyVnd: 100_000,
   deathStreak: 3,
   deathMonthly: 5,
   coinVnd: 2_000,
@@ -104,6 +107,7 @@ export function mergeRules(partial: unknown): Rules {
 
 /** Xu (cents, 1 xu = 100) nhận được cho 1 lần cho ăn khi sân có `alive` con. `bonus` = cộng thêm hệ số (kỹ năng Thìn). */
 export function feedCents(alive: number, rules: Rules = DEFAULT_RULES, bonus = 0): number {
+  if (rules.coefLocked) return 100;
   // Giả định: khi tạm thời chưa có con nào (đang chờ cấp lại), vẫn tính hệ số x1.
   const n = Math.max(1, Math.min(alive, rules.maxPets));
   const top = rules.coefTable[rules.maxPets - 1];
@@ -127,7 +131,7 @@ export function stealCents(
   return Math.max(0, Math.min(pct, (opts.maxCoins ?? rules.stealMaxCoins) * 100));
 }
 
-/** Con giáp có chết sau lần bỏ bữa này không. */
+/** Con giáp có chết sau lần bỏ bữa này không. `monthlyMisses` = số bữa bỏ trong tháng kể từ lần chết gần nhất. */
 export function shouldDie(streak: number, monthlyMisses: number, rules: Rules = DEFAULT_RULES): boolean {
   return streak >= rules.deathStreak || monthlyMisses >= rules.deathMonthly;
 }

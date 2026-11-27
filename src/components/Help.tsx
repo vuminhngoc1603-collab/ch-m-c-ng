@@ -50,15 +50,22 @@ export async function Help({ autoOpenKey }: { autoOpenKey?: string }) {
 
       <h3>3. Xu</h3>
       <ul>
-        <li>Mỗi lần cho ăn đúng giờ được <b>1 xu × hệ số</b>. 1 xu = {fmtVnd(rules.coinVnd)}.</li>
-        <li>Hệ số tăng theo số con đang sống: 1 con x{coef[0]}, 2 con x{coef[1]}, 3 con x{coef[2]}… {rules.maxPets} con x{coef[rules.maxPets - 1]}.</li>
-        <li>Nuôi càng nhiều con, mỗi bữa càng được nhiều xu.</li>
+        {rules.coefLocked ? (
+          <li>Mỗi lần cho ăn đúng giờ được <b>1 xu</b>, nuôi bao nhiêu con cũng vậy (hệ số đang khoá x1). 1 xu = {fmtVnd(rules.coinVnd)}.</li>
+        ) : (
+          <>
+            <li>Mỗi lần cho ăn đúng giờ được <b>1 xu × hệ số</b>. 1 xu = {fmtVnd(rules.coinVnd)}.</li>
+            <li>Hệ số tăng theo số con đang sống: 1 con x{coef[0]}, 2 con x{coef[1]}, 3 con x{coef[2]}… {rules.maxPets} con x{coef[rules.maxPets - 1]}.</li>
+            <li>Nuôi càng nhiều con, mỗi bữa càng được nhiều xu.</li>
+          </>
+        )}
       </ul>
 
       <h3>4. Bỏ bữa và con giáp chết</h3>
       <ul>
         <li>Không bấm cho ăn trong khung giờ là <b>bỏ bữa</b>.</li>
-        <li>Bỏ <b>{rules.deathStreak} bữa liên tiếp</b>, hoặc bỏ tới bữa thứ <b>{rules.deathMonthly}</b> trong tháng (và mỗi bữa bỏ sau đó), thì <b>1 con ngẫu nhiên chết</b>.</li>
+        <li>Bỏ <b>{rules.deathStreak} bữa liên tiếp</b>, hoặc bỏ <b>{rules.deathMonthly} bữa</b> trong tháng, thì <b>1 con ngẫu nhiên chết</b>.</li>
+        <li>Sau mỗi lần chết, bộ đếm bỏ bữa về 0: phải bỏ đủ {rules.deathStreak} bữa liên tiếp hoặc {rules.deathMonthly} bữa nữa trong tháng mới chết tiếp.</li>
         <li>Mỗi con chết bị <b>phạt {fmtVnd(rules.penaltyVnd)} trừ vào lương</b> (không trừ xu).</li>
         <li>Nếu chết mất con cuối cùng, hôm sau bạn được cấp 1 con mới.</li>
       </ul>

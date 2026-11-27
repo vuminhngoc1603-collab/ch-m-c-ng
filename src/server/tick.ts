@@ -65,19 +65,23 @@ export async function runTick(now = new Date(), rng: Rng = Math.random) {
       const upd = await tx.attendance.updateMany({ where: { id: slot.id, feedStatus: "PENDING" }, data: { feedStatus: "MISSED" } });
       if (upd.count === 0) return;
       stats.missed++;
-      const user = await tx.user.update({ where: { id: slot.userId }, data: { missStreak: { increment: 1 } } });
       const period = periodOf(slot.day);
-      const monthly = await tx.attendance.count({
-        where: { userId: slot.userId, feedStatus: "MISSED", day: { gte: `${period}-01`, lte: `${period}-31` } },
+      const before = await tx.user.findUniqueOrThrow({ where: { id: slot.userId } });
+      // Bộ đếm theo tháng tính từ lần chết gần nhất trong tháng (sang tháng mới thì đếm lại từ 0).
+      const monthly = (before.monthMissPeriod === period ? before.monthMisses : 0) + 1;
+      const user = await tx.user.update({
+        where: { id: slot.userId },
+        data: { missStreak: { increment: 1 }, monthMisses: monthly, monthMissPeriod: period },
       });
       if (shouldDie(user.missStreak, monthly, rules)) {
         const reason =
           user.missStreak >= rules.deathStreak
             ? `bỏ bữa ${user.missStreak} lần liên tiếp`
-            : `bỏ bữa lần thứ ${monthly} trong tháng ${period}`;
+            : `bỏ bữa ${monthly} lần trong tháng ${period}`;
         const dead = await killRandomPet(tx, slot.userId, reason, rules, now, rng, slot.day);
         if (dead) stats.deaths++;
-        if (user.missStreak >= rules.deathStreak) await tx.user.update({ where: { id: slot.userId }, data: { missStreak: 0 } });
+        // Sau mỗi lần chết (hoặc Mão đỡ chết): đếm lại từ 0, phải bỏ đủ 3 bữa liên tiếp / 5 bữa nữa mới chết tiếp.
+        await tx.user.update({ where: { id: slot.userId }, data: { missStreak: 0, monthMisses: 0 } });
       }
     });
   }

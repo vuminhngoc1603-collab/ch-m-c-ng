@@ -47,8 +47,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ o
   // Dậu "Gáy sáng": nhắc trước giờ cho ăn.
   const nextFeed = slots.find((s) => s.feedStatus === "PENDING" && s.shift.feedStart >= v.minutes);
   const dauIn = sk.has("DAU") && nextFeed ? nextFeed.shift.feedStart - v.minutes : null;
+  // Bộ đếm tính chết: đếm lại từ 0 sau mỗi lần chết.
+  const deathMisses = me.monthMissPeriod === v.period ? me.monthMisses : 0;
   const mood: "ok" | "hungry" | "critical" =
-    me.missStreak >= rules.deathStreak - 1 || monthMisses >= rules.deathMonthly - 1 ? "critical" : me.missStreak >= 1 ? "hungry" : "ok";
+    me.missStreak >= rules.deathStreak - 1 || deathMisses >= rules.deathMonthly - 1 ? "critical" : me.missStreak >= 1 ? "hungry" : "ok";
   const net = await checkNetwork(user, (await requestMeta()).ip);
   const offNet = net.policy.mode !== "off" && !net.network && !net.exempt;
   const canFeed = net.allowed && slots.some((s) => s.feedStatus === "PENDING" && inWindow(v.minutes, s.shift.feedStart, s.shift.feedEnd));
@@ -77,7 +79,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ o
         {mood !== "ok" && (
           <div className={`flash ${mood === "critical" ? "err" : ""}`} style={mood === "hungry" ? { background: "var(--warn-bg)", color: "var(--warn)" } : undefined}>
             {mood === "critical"
-              ? `⚠️ Con giáp đang nguy kịch: đã bỏ ${me.missStreak} bữa liên tiếp, ${monthMisses} bữa trong tháng. ${monthMisses >= rules.deathMonthly ? "Mỗi" : "Bỏ thêm 1"} bữa bỏ tiếp theo trong tháng sẽ làm 1 con chết (phạt ${rules.penaltyVnd.toLocaleString("vi-VN")} đ).`
+              ? `⚠️ Con giáp đang nguy kịch: đã bỏ ${me.missStreak}/${rules.deathStreak} bữa liên tiếp, ${deathMisses}/${rules.deathMonthly} bữa trong tháng. Bỏ thêm 1 bữa nữa sẽ làm 1 con chết (phạt ${rules.penaltyVnd.toLocaleString("vi-VN")} đ).`
               : `🍂 Con giáp đang đói: đã bỏ ${me.missStreak} bữa liên tiếp.`}
           </div>
         )}
@@ -92,7 +94,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ o
           <div className="stat"><div className="label">Ví xu</div><div className="value">{fmtCoins(coins)}</div><div className="muted small">≈ {(Math.round((coins * rules.coinVnd) / 100)).toLocaleString("vi-VN")} đ</div></div>
           <div className="stat"><div className="label">Điểm mua trứng</div><div className="value">{points}</div></div>
           <div className="stat"><div className="label">Hệ số hiện tại</div><div className="value">x{coef.toLocaleString("vi-VN")}</div><div className="muted small">{pets.length}/{rules.maxPets} con</div></div>
-          <div className="stat"><div className="label">Bỏ bữa tháng này</div><div className="value">{monthMisses}</div><div className="muted small">liên tiếp: {me.missStreak}</div></div>
+          <div className="stat"><div className="label">Bỏ bữa tháng này</div><div className="value">{monthMisses}</div><div className="muted small">liên tiếp: {me.missStreak}/{rules.deathStreak} · tính chết: {deathMisses}/{rules.deathMonthly}</div></div>
         </div>
 
         <div className="garden-layout">
@@ -131,7 +133,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ o
               <form action={feedAction}><button className="btn primary big" disabled={!canFeed}>🍚 Cho ăn (check in)</button></form>
               <form action={closeAction}><button className="btn big" disabled={!canClose}>🔒 Đóng cửa (check out)</button></form>
             </div>
-            <p className="muted small">Mỗi lần cho ăn được 1 xu × hệ số. Quên đóng cửa thì từ 17h30–24h00 người khác được trộm xu của bạn.</p>
+            <p className="muted small">Mỗi lần cho ăn được {rules.coefLocked ? "1 xu" : "1 xu × hệ số"}. Quên đóng cửa thì từ 17h30–24h00 người khác được trộm xu của bạn.</p>
           </section>
 
           <section className="card">

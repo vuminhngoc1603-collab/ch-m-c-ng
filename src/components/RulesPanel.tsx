@@ -55,15 +55,22 @@ export async function RulesPanel({ role }: { role: Role }) {
       <details className="rules-acc">
         <summary>Xu và hệ số</summary>
         <ul className="small">
-          <li>1 lần cho ăn = 1 xu × hệ số. 1 xu = {fmtVnd(rules.coinVnd)}.</li>
-          <li>Hệ số theo số con: 1 con x{coef[0]}, thêm mỗi con +{(coef[1] - coef[0]).toLocaleString("vi-VN")}, đủ {rules.maxPets} con x{coef[rules.maxPets - 1]}.</li>
+          {rules.coefLocked ? (
+            <li>1 lần cho ăn = 1 xu, nuôi bao nhiêu con cũng vậy (hệ số đang khoá x1). 1 xu = {fmtVnd(rules.coinVnd)}.</li>
+          ) : (
+            <>
+              <li>1 lần cho ăn = 1 xu × hệ số. 1 xu = {fmtVnd(rules.coinVnd)}.</li>
+              <li>Hệ số theo số con: 1 con x{coef[0]}, thêm mỗi con +{(coef[1] - coef[0]).toLocaleString("vi-VN")}, đủ {rules.maxPets} con x{coef[rules.maxPets - 1]}.</li>
+            </>
+          )}
         </ul>
       </details>
 
       <details className="rules-acc">
         <summary>Bỏ bữa, con giáp chết</summary>
         <ul className="small">
-          <li>Bỏ {rules.deathStreak} bữa liên tiếp, hoặc từ bữa thứ {rules.deathMonthly} trong tháng: 1 con chết.</li>
+          <li>Bỏ {rules.deathStreak} bữa liên tiếp, hoặc {rules.deathMonthly} bữa trong tháng: 1 con chết.</li>
+          <li>Sau mỗi lần chết, bộ đếm về 0: phải bỏ đủ {rules.deathStreak} bữa liên tiếp hoặc {rules.deathMonthly} bữa nữa mới chết tiếp.</li>
           <li>Mỗi con chết phạt <b>{fmtVnd(rules.penaltyVnd)}</b> trừ lương.</li>
           <li>Mất con cuối thì hôm sau được cấp con mới.</li>
         </ul>

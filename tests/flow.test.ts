@@ -67,7 +67,7 @@ describe("full-time: cho ăn, đóng cửa, bỏ bữa", () => {
     expect(satSlots).toBe(0);
   });
 
-  it("bỏ 3 bữa liên tiếp -> chết 1 con, phạt 300k, có 1 con thì hôm sau cấp con mới", async () => {
+  it("bỏ 3 bữa liên tiếp -> chết 1 con, phạt 100k, có 1 con thì hôm sau cấp con mới", async () => {
     const u = await makeUser("a@x.com", "FULLTIME", at(MON, "7:00"));
     await runTick(at(MON, "7:01"), first); // cấp con đầu
     expect(await alive(u.id)).toBe(1);
@@ -79,7 +79,7 @@ describe("full-time: cho ăn, đóng cửa, bỏ bữa", () => {
     expect(await alive(u.id)).toBe(0);
     const pen = await prisma.penalty.findMany({ where: { userId: u.id } });
     expect(pen).toHaveLength(1);
-    expect(pen[0].amountVnd).toBe(300000);
+    expect(pen[0].amountVnd).toBe(100000);
     expect(await coinBalance(u.id)).toBe(100); // phạt không trừ xu
     const user = await prisma.user.findUniqueOrThrow({ where: { id: u.id } });
     expect(user.missStreak).toBe(0);
@@ -90,7 +90,7 @@ describe("full-time: cho ăn, đóng cửa, bỏ bữa", () => {
     expect(pets[0].source).toBe("REGRANT");
   });
 
-  it("cho ăn thành công reset bộ đếm liên tiếp; bỏ lần thứ 5 trong tháng thì chết, lần 6 chết tiếp", async () => {
+  it("cho ăn thành công reset bộ đếm liên tiếp; bỏ lần thứ 5 trong tháng thì chết, sau đó đếm lại từ 0", async () => {
     const u = await makeUser("a@x.com", "FULLTIME", at(MON, "7:00"));
     await runTick(at(MON, "7:01"), first);
     // cho 3 con để thấy chết liên tiếp
@@ -106,18 +106,49 @@ describe("full-time: cho ăn, đóng cửa, bỏ bữa", () => {
     expect(await alive(u.id)).toBe(3); // 4 lần bỏ trong tháng
     await runTick(at(FRI, "9:05"), first); // lần 5
     expect(await alive(u.id)).toBe(2);
-    await runTick(at(FRI, "14:05"), first); // lần 6 (streak 2)
+    let me = await prisma.user.findUniqueOrThrow({ where: { id: u.id } });
+    expect(me.monthMisses).toBe(0); // chết xong cả 2 bộ đếm về 0
+    expect(me.missStreak).toBe(0);
+    await runTick(at(FRI, "14:05"), first); // lần 6 trong tháng nhưng chỉ là bữa thứ 1 sau khi chết
+    expect(await alive(u.id)).toBe(2);
+    expect(await prisma.penalty.count({ where: { userId: u.id } })).toBe(1);
+    me = await prisma.user.findUniqueOrThrow({ where: { id: u.id } });
+    expect(me.monthMisses).toBe(1);
+    expect(me.missStreak).toBe(1);
+    // Bỏ tiếp 2 bữa (T2 tuần sau) -> đủ 3 liên tiếp mới chết tiếp.
+    await runTick(at("2026-11-23", "9:05"), first);
+    expect(await alive(u.id)).toBe(2);
+    await runTick(at("2026-11-23", "14:05"), first);
     expect(await alive(u.id)).toBe(1);
     expect(await prisma.penalty.count({ where: { userId: u.id } })).toBe(2);
   });
 
-  it("hệ số xu theo số con sống", async () => {
+  it("bộ đếm theo tháng: sau khi chết phải bỏ đủ 5 bữa nữa mới chết tiếp", async () => {
+    const u = await makeUser("a@x.com", "FULLTIME", at(MON, "7:00"));
+    await runTick(at(MON, "7:01"), first);
+    await adjustPoints(u.id, u.id, 1000, "test");
+    await buyEgg(u.id, undefined, at(MON, "7:05"), first);
+    await buyEgg(u.id, undefined, at(MON, "7:06"), first);
+    // Bỏ sáng, cho ăn chiều suốt 2 tuần: chết ở bữa bỏ thứ 5 và thứ 10, không chết ở 6..9.
+    const days = [MON, TUE, WED, THU, FRI, "2026-11-23", "2026-11-24", "2026-11-25", "2026-11-26", "2026-11-27"];
+    const aliveAfter: number[] = [];
+    for (const d of days) {
+      await runTick(at(d, "9:05"), first);
+      aliveAfter.push(await alive(u.id));
+      await feed(u.id, at(d, "13:50"));
+    }
+    expect(aliveAfter).toEqual([3, 3, 3, 3, 2, 2, 2, 2, 2, 1]);
+    expect(await prisma.penalty.count({ where: { userId: u.id } })).toBe(2);
+  });
+
+  it("hệ số khoá mặc định: 2 con vẫn 1 xu; admin mở khoá thì theo số con sống", async () => {
     const u = await makeUser("a@x.com", "FULLTIME", at(MON, "7:00"));
     await runTick(at(MON, "7:01"), first);
     await adjustPoints(u.id, u.id, 20, "test");
     await buyEgg(u.id, undefined, at(MON, "7:05"), first);
-    const r = await feed(u.id, at(MON, "8:31"));
-    expect(r.cents).toBe(125);
+    expect((await feed(u.id, at(MON, "8:31"))).cents).toBe(100);
+    await prisma.setting.update({ where: { key: "rules" }, data: { value: { skills: { enabled: [] }, coefLocked: false } } });
+    expect((await feed(u.id, at(MON, "13:50"))).cents).toBe(125);
   });
 
   it("ngày nghỉ phép đã duyệt và ngày lễ: không có lượt, không bỏ bữa", async () => {
@@ -221,7 +252,7 @@ describe("trứng & sân", () => {
     expect(moved.find((p) => p.id === p0.id)!.slot).toBe(p1.slot);
     expect(moved.find((p) => p.id === p1.id)!.slot).toBe(p0.slot);
     const r = await feed(u.id, at(MON, "8:45"));
-    expect(r.cents).toBe(400);
+    expect(r.cents).toBe(100); // hệ số khoá: 12 con vẫn 1 xu
   });
 });
 

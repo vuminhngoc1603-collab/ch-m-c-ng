@@ -19,7 +19,7 @@ import { guardCheckIn, saveNetworkPolicy, type NetworkMode, type NetworkScope } 
 import { normalizeCidr } from "@/lib/ip";
 import { logActivity } from "@/server/log";
 import { settleMonth } from "@/server/settlement";
-import { saveRules } from "@/server/settings";
+import { getRules, saveRules } from "@/server/settings";
 import { mergeRules } from "@/lib/rules";
 import { parseMin, vn } from "@/lib/time";
 import { ZODIAC } from "@/lib/zodiac";
@@ -250,6 +250,18 @@ export async function saveRulesAction(form: FormData) {
     }
     await saveRules(mergeRules(parsed));
     return "Đã lưu cấu hình luật.";
+  });
+}
+
+/** Admin bật/tắt khoá hệ số nhân (khoá = mỗi lần cho ăn luôn 1 xu). */
+export async function setCoefLockAction(form: FormData) {
+  const a = await requireAdmin();
+  await run("/admin/settings", async () => {
+    const locked = str(form, "locked") === "1";
+    const rules = await getRules();
+    await saveRules({ ...rules, coefLocked: locked });
+    await logActivity(a.id, "admin.rules.coefLock", { locked });
+    return locked ? "Đã khoá hệ số nhân: mỗi lần cho ăn = 1 xu." : "Đã mở hệ số nhân theo số con.";
   });
 }
 

@@ -44,7 +44,7 @@ export async function todaySlots(userId: string, now = new Date()) {
   });
 }
 
-/** Check in = cho ăn. Mỗi lần thành công ghi 1 xu × hệ số theo số con đang sống. */
+/** Check in = cho ăn. Mỗi lần thành công ghi 1 xu (× hệ số theo số con đang sống nếu không khoá hệ số). */
 export async function feed(userId: string, now = new Date(), meta: Meta = {}) {
   const v = vn(now);
   const slots = await todaySlots(userId, now);
