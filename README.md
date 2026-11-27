@@ -1,6 +1,6 @@
 # Sân 12 con giáp: chấm công bằng nuôi con giáp
 
-Web chấm công nội bộ: mỗi lần **check in = cho con giáp ăn** (1 xu × hệ số), **check out = đóng cửa sân**.
+Web chấm công nội bộ: mỗi lần **check in = cho con giáp ăn** (1 xu), **check out = đóng cửa sân**.
 Quên đóng cửa thì đồng nghiệp được trộm xu, bỏ bữa thì con giáp chết. Đặc tả gốc: *System Requirements Context v1.2*.
 
 **Stack:** Next.js 15 (App Router, Server Actions) · TypeScript · PostgreSQL · Prisma 6 · Auth.js v5 (Google) · Vitest.
@@ -13,9 +13,9 @@ Quên đóng cửa thì đồng nghiệp được trộm xu, bỏ bữa thì con
 | Vai trò | Admin (chỉ quản trị) · Full-time · Part-time |
 | Full-time | T2–T6: cho ăn 8h30–9h00 và 13h45–14h00, đóng cửa 17h30–18h00. T7/CN nghỉ. |
 | Part-time | Đăng ký ca tuần sau **chỉ trong ngày thứ Sáu**; hết thứ Sáu khoá, chỉ admin đổi hộ (bắt buộc ghi lý do). Chặn 2 ca chồng giờ. T7/CN tuỳ chọn. |
-| Xu | 1 xu = 2.000 đ. Hệ số x1, +0,25 mỗi con, con thứ 12 = x4. Sổ cái chỉ ghi thêm. |
+| Xu | 1 xu = 2.000 đ. Hệ số đang **khoá x1**: mỗi lần cho ăn = 1 xu bất kể số con (`coefLocked`), riêng kỹ năng Thìn vẫn +0,25. Admin bật/tắt ở trang **Cấu hình** (nút Mở hệ số / Khoá hệ số). Mở khoá thì dùng bảng hệ số x1, +0,25 mỗi con, con thứ 12 = x4. Sổ cái chỉ ghi thêm. |
 | Sân | 12 ô, mỗi con giáp có hình cố định, người dùng tự đổi chỗ. Con đầu miễn phí khi được duyệt. |
-| Chết & phạt | Bỏ 3 bữa liên tiếp, hoặc từ bữa thứ 5 trong tháng (mỗi bữa sau chết thêm). Chết 1 con ngẫu nhiên, phạt 300.000 đ trừ lương (không trừ xu). Mất con cuối thì hôm sau được cấp con mới. |
+| Chết & phạt | Bỏ 3 bữa liên tiếp, hoặc 5 bữa trong tháng. Sau mỗi lần chết cả 2 bộ đếm về 0, phải bỏ đủ 3 liên tiếp / 5 bữa nữa mới chết tiếp. Chết 1 con ngẫu nhiên, phạt 100.000 đ trừ lương (không trừ xu). Mất con cuối thì hôm sau được cấp con mới. |
 | Trộm xu | Quên đóng cửa → 17h30–24h00 cùng ngày, mỗi lần lấy 10% ví (tối đa 5 xu), tối đa 3 người/lần quên. Có khoá dòng để bấm cùng lúc không vượt 3. |
 | Cuối tháng | Biến động = cho ăn + trộm được − bị trộm (+ điều chỉnh admin). Admin xem/tải CSV để tính thưởng. Quy đổi 1 xu = 1 điểm (tháng âm = 0), điểm dồn sang tháng sau. |
 | Trứng | Mua bằng điểm: con thứ n giá 20 × (n − 1). Nở ngẫu nhiên, không trùng con đang có. |
@@ -61,8 +61,8 @@ Mỗi con được tách thành các lớp **thân, đầu, chân, đuôi, tay, 
 ## Giả định đã chọn (chưa có trong đặc tả)
 
 1. **Quên đóng cửa chỉ tính khi hôm đó có đi làm** (đã cho ăn ít nhất 1 lượt). Không đi làm cả ngày thì không bị mở cửa cho trộm, vì đã bị tính bỏ bữa.
-2. **Sân tạm trống (đang chờ cấp lại con)** vẫn được 1 xu mỗi lần cho ăn (hệ số x1).
-3. **Bỏ bữa liên tiếp tính xuyên tháng**; bộ đếm về 0 khi cho ăn thành công hoặc khi đạt 3 lần (đã làm chết 1 con).
+2. **Sân tạm trống (đang chờ cấp lại con)** vẫn được 1 xu mỗi lần cho ăn.
+3. **Bỏ bữa liên tiếp tính xuyên tháng**; bộ đếm về 0 khi cho ăn thành công. Bộ đếm theo tháng về 0 khi sang tháng mới. Cả 2 bộ đếm về 0 sau mỗi lần chết (kể cả khi Mão đỡ chết, hoặc sân đang trống không còn con để chết).
 4. **Trứng khi sân trống** (vừa mất hết con) giá 0 điểm.
 5. **Tài khoản được duyệt giữa ngày** chỉ phải cho ăn các lượt còn chưa hết giờ trong ngày đó.
 6. Điều chỉnh xu của admin được tính vào biến động tháng (cột riêng trên báo cáo).
@@ -105,7 +105,7 @@ npm run dev                   # http://localhost:3000
 Kiểm thử (cần một database Postgres trống `chamcong_test`, xem `vitest.config.ts`):
 
 ```bash
-npm test      # 20 test: hệ số, giá trứng, trộm, chết, đăng ký ca, nghỉ phép, quyết toán, chạy song song
+npm test      # 47 test: hệ số, giá trứng, trộm, chết, đăng ký ca, nghỉ phép, quyết toán, chạy song song
 ```
 
 ## Tạo Google OAuth (đăng nhập Gmail)
@@ -138,8 +138,8 @@ Mỗi con 1 kỹ năng, chỉ có tác dụng khi con đó còn sống. Con số
 | Tý | Tay nhanh | Trộm mỗi lần tối đa 6 xu (thường 5) |
 | Sửu | Cần cù | Tuần đi làm không bỏ bữa nào: +1 xu |
 | Dần | Gầm canh cửa | Lần quên đóng cửa đầu tiên mỗi tháng: không ai trộm được |
-| Mão | Chín mạng | 1 lần/quý đỡ chết, **vẫn phạt 300k** |
-| Thìn | Uy rồng | Hệ số +0,25, không vượt x4 |
+| Mão | Chín mạng | 1 lần/quý đỡ chết, **vẫn phạt 100k** |
+| Thìn | Uy rồng | Hệ số +0,25, không vượt x4 (vẫn chạy khi hệ số khoá: x1 + 0,25) |
 | Tỵ | Nọc độc | Ai đã trộm sân bạn 1 lần thì bị khoá 7 ngày không trộm được sân bạn lần nữa (`tiLockDays`) |
 | Ngọ | Phi nước đại | 10 phút đầu khi sân mở cửa, chỉ người có Ngọ được trộm |
 | Mùi | Hiền lành | Bị trộm 7% thay vì 10% |

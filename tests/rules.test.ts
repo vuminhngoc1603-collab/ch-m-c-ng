@@ -1,16 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { eggPrice, feedCents, pointsFromNet, shiftsOverlap, shouldDie, stealCents } from "@/lib/rules";
+import { DEFAULT_RULES, eggPrice, feedCents, pointsFromNet, shiftsOverlap, shouldDie, stealCents } from "@/lib/rules";
 import { addDays, fmtMin, periodBounds, prevPeriod, vn, vnInstant } from "@/lib/time";
 
 describe("hệ số xu", () => {
-  it("1 con x1, mỗi con thêm +0,25, con thứ 12 x4", () => {
-    expect(feedCents(1)).toBe(100);
-    expect(feedCents(2)).toBe(125);
-    expect(feedCents(5)).toBe(200);
-    expect(feedCents(11)).toBe(350);
-    expect(feedCents(12)).toBe(400);
-    expect(feedCents(20)).toBe(400);
-    expect(feedCents(0)).toBe(100);
+  it("mặc định khoá hệ số: luôn 1 xu, Thìn vẫn +0,25", () => {
+    expect(DEFAULT_RULES.coefLocked).toBe(true);
+    for (const n of [0, 1, 2, 5, 12]) expect(feedCents(n)).toBe(100);
+    expect(feedCents(3, DEFAULT_RULES, 0.25)).toBe(125);
+    expect(feedCents(12, DEFAULT_RULES, 0.25)).toBe(125);
+  });
+
+  it("mở khoá: 1 con x1, mỗi con thêm +0,25, con thứ 12 x4", () => {
+    const open = { ...DEFAULT_RULES, coefLocked: false };
+    expect(feedCents(1, open)).toBe(100);
+    expect(feedCents(2, open)).toBe(125);
+    expect(feedCents(5, open)).toBe(200);
+    expect(feedCents(11, open)).toBe(350);
+    expect(feedCents(12, open)).toBe(400);
+    expect(feedCents(20, open)).toBe(400);
+    expect(feedCents(0, open)).toBe(100);
   });
 });
 

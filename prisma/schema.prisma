@@ -111,6 +111,8 @@ model User {
   approvedAt    DateTime?
   approvedById  String?
   missStreak    Int        @default(0) // số lần bỏ bữa liên tiếp hiện tại
+  monthMisses   Int        @default(0) // số lần bỏ bữa trong tháng monthMissPeriod kể từ lần chết gần nhất
+  monthMissPeriod String? // tháng (YYYY-MM) của monthMisses
   regrantOn     String? // ngày (YYYY-MM-DD) sẽ được cấp lại con mới
   networkExempt Boolean   @default(false) // được chấm công ngoài Wi-Fi công ty (làm từ xa, công tác)
   networkExemptUntil String? // hết miễn sau ngày này (YYYY-MM-DD); null = không thời hạn
@@ -352,7 +354,7 @@ model Pet {
   @@index([userId, status])
 }
 
-// Phạt 300k mỗi lần con giáp chết: chỉ ghi chú, trừ lương, không liên quan xu.
+// Phạt 100k mỗi lần con giáp chết: chỉ ghi chú, trừ lương, không liên quan xu.
 model Penalty {
   id        String   @id @default(cuid())
   userId    String

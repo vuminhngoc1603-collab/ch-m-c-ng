@@ -40,7 +40,13 @@ async function forgetful(victimId: string, day = MON) {
 }
 
 describe("kỹ năng xu", () => {
-  it("Thìn: hệ số +0,25 nhưng không vượt x4", async () => {
+  it("Thìn: hệ số khoá vẫn +0,25", async () => {
+    const a = await staff("a@x.com", ["THIN", "DAU", "TY"]);
+    expect((await feed(a.id, at(MON, "8:40"))).cents).toBe(125);
+  });
+
+  it("Thìn: hệ số +0,25 nhưng không vượt x4 (khi admin mở khoá hệ số)", async () => {
+    await prisma.setting.upsert({ where: { key: "rules" }, create: { key: "rules", value: { coefLocked: false } }, update: { value: { coefLocked: false } } });
     const a = await staff("a@x.com", ["THIN"]);
     const r = await feed(a.id, at(MON, "8:40"));
     expect(r.cents).toBe(125); // 1 con x1 + 0,25
@@ -91,7 +97,7 @@ describe("kỹ năng xu", () => {
 });
 
 describe("kỹ năng phòng thủ", () => {
-  it("Mão: đỡ chết 1 lần mỗi quý nhưng vẫn phạt 300k", async () => {
+  it("Mão: đỡ chết 1 lần mỗi quý nhưng vẫn phạt 100k", async () => {
     const a = await staff("a@x.com", ["MAO", "DAU"]);
     const rules = await getRules();
     const r1 = await prisma.$transaction((tx) => killRandomPet(tx, a.id, "thử", rules, at(MON, "9:01"), first, MON));
